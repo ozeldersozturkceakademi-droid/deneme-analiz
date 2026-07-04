@@ -87,6 +87,23 @@
   .btn:active{ opacity:.85;}
   .btn.secondary{ background:var(--ice); color:var(--navy); }
   .btn.small{ width:auto; padding:8px 14px; font-size:12px; margin-top:0;}
+  .btn.half{ width:calc(50% - 4px);}
+  .btn-row{ display:flex; gap:8px; margin-top:14px;}
+  .btn-row .btn{ margin-top:0;}
+
+  .ogrenci-item{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:12px 0; border-bottom:1px solid var(--ice); gap:10px;
+  }
+  .ogrenci-item:last-child{ border-bottom:none;}
+  .ogrenci-item .info .ad{ font-weight:700; font-size:13.5px; color:var(--navy);}
+  .ogrenci-item .info .meta{ font-size:11.5px; color:var(--muted); margin-top:2px;}
+  .ogrenci-item .aksiyon{ display:flex; gap:6px; flex-shrink:0;}
+  .ogrenci-item .aksiyon button{
+    font-size:11px; font-weight:700; border:none; padding:6px 10px; border-radius:8px; cursor:pointer;
+  }
+  .ogrenci-item .btn-duzenle{ background:var(--ice); color:var(--navy);}
+  .ogrenci-item .btn-sil{ background:var(--danger-bg); color:var(--danger);}
 
   /* DENEME LİSTESİ */
   .mini-list-item{
@@ -153,6 +170,7 @@
 
 <div class="tabs">
   <div class="tab active" data-tab="tab-deneme">Deneme Oluştur</div>
+  <div class="tab" data-tab="tab-ogrenci">Öğrenciler</div>
   <div class="tab" data-tab="tab-manuel">Manuel Giriş</div>
   <div class="tab" data-tab="tab-dosya">Dosyadan Aktar</div>
   <div class="tab" id="tabOptik">Optik Okuma</div>
@@ -178,6 +196,34 @@
     <div class="card">
       <h3><span class="dot"></span> Kayıtlı Denemeler</h3>
       <div id="denemeListe"></div>
+    </div>
+  </div>
+
+  <!-- ================= TAB: ÖĞRENCİLER ================= -->
+  <div class="panel" id="tab-ogrenci">
+    <div class="card">
+      <h3><span class="dot"></span> <span id="ogrenciFormBaslik">Yeni Öğrenci Ekle</span></h3>
+      <label>Ad Soyad</label>
+      <input type="text" id="o_ad_soyad" placeholder="örn: Bora Özbekoğlu">
+      <label>Öğrenci No</label>
+      <input type="text" id="o_ogrenci_no" placeholder="örn: 6144">
+      <label>Sınıf</label>
+      <input type="text" id="o_sinif" placeholder="örn: 8-A">
+      <label>Okul</label>
+      <input type="text" id="o_okul" placeholder="örn: ... Ortaokulu">
+      <label>Veli Adı</label>
+      <input type="text" id="o_veli_adi" placeholder="örn: Ahmet Özbekoğlu">
+      <label>Veli Telefon</label>
+      <input type="text" id="o_veli_telefon" placeholder="örn: 0532 ... ..">
+      <div class="btn-row">
+        <button class="btn secondary half" id="btnOgrenciIptal" style="display:none;">İptal</button>
+        <button class="btn" id="btnOgrenciKaydet">Öğrenci Ekle</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3><span class="dot"></span> Kayıtlı Öğrenciler</h3>
+      <div id="ogrenciListe"></div>
     </div>
   </div>
 
@@ -559,8 +605,118 @@ document.getElementById('btnEslestirKaydet').addEventListener('click', ()=>{
   `;
 });
 
+// ============ TAB: ÖĞRENCİLER (Supabase'e bağlı) ============
+let ogrenciler = [];
+let duzenlenenOgrenciId = null;
+
+async function ogrenciListesiYukle(){
+  const el = document.getElementById('ogrenciListe');
+  el.innerHTML = '<div class="hint">Yükleniyor...</div>';
+  ogrenciler = await ogrencileriListele();
+  ogrenciListesiCiz();
+}
+
+function ogrenciListesiCiz(){
+  const el = document.getElementById('ogrenciListe');
+  el.innerHTML = '';
+  if(ogrenciler.length === 0){
+    el.innerHTML = '<div class="hint">Henüz kayıtlı öğrenci yok.</div>';
+  }
+  ogrenciler.forEach(o=>{
+    const div = document.createElement('div');
+    div.className = 'ogrenci-item';
+    div.innerHTML = `
+      <div class="info">
+        <div class="ad">${o.ad_soyad}</div>
+        <div class="meta">${o.ogrenci_no ? 'No: ' + o.ogrenci_no + ' · ' : ''}${o.sinif || ''}</div>
+      </div>
+      <div class="aksiyon">
+        <button class="btn-duzenle" data-id="${o.id}">Düzenle</button>
+        <button class="btn-sil" data-id="${o.id}">Sil</button>
+      </div>
+    `;
+    el.appendChild(div);
+  });
+
+  el.querySelectorAll('.btn-duzenle').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const o = ogrenciler.find(x => x.id === btn.dataset.id);
+      if(!o) return;
+      duzenlenenOgrenciId = o.id;
+      document.getElementById('o_ad_soyad').value = o.ad_soyad || '';
+      document.getElementById('o_ogrenci_no').value = o.ogrenci_no || '';
+      document.getElementById('o_sinif').value = o.sinif || '';
+      document.getElementById('o_okul').value = o.okul || '';
+      document.getElementById('o_veli_adi').value = o.veli_adi || '';
+      document.getElementById('o_veli_telefon').value = o.veli_telefon || '';
+      document.getElementById('ogrenciFormBaslik').textContent = 'Öğrenciyi Düzenle';
+      document.getElementById('btnOgrenciKaydet').textContent = 'Güncelle';
+      document.getElementById('btnOgrenciIptal').style.display = 'inline-flex';
+      document.getElementById('o_ad_soyad').scrollIntoView({behavior:'smooth', block:'start'});
+    });
+  });
+
+  el.querySelectorAll('.btn-sil').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const o = ogrenciler.find(x => x.id === btn.dataset.id);
+      if(!o) return;
+      if(!confirm(`${o.ad_soyad} silinsin mi? Bu öğrenciye ait tüm deneme sonuçları da silinecek.`)) return;
+      btn.textContent = 'Siliniyor...';
+      const basarili = await ogrenciSil(o.id);
+      if(!basarili){ alert('Silinemedi. Konsolu (F12) kontrol et.'); btn.textContent = 'Sil'; return; }
+      await ogrenciListesiYukle();
+    });
+  });
+}
+
+function ogrenciFormuSifirla(){
+  duzenlenenOgrenciId = null;
+  document.getElementById('o_ad_soyad').value = '';
+  document.getElementById('o_ogrenci_no').value = '';
+  document.getElementById('o_sinif').value = '';
+  document.getElementById('o_okul').value = '';
+  document.getElementById('o_veli_adi').value = '';
+  document.getElementById('o_veli_telefon').value = '';
+  document.getElementById('ogrenciFormBaslik').textContent = 'Yeni Öğrenci Ekle';
+  document.getElementById('btnOgrenciKaydet').textContent = 'Öğrenci Ekle';
+  document.getElementById('btnOgrenciIptal').style.display = 'none';
+}
+
+document.getElementById('btnOgrenciIptal').addEventListener('click', ogrenciFormuSifirla);
+
+document.getElementById('btnOgrenciKaydet').addEventListener('click', async ()=>{
+  const bilgiler = {
+    ad_soyad: document.getElementById('o_ad_soyad').value.trim(),
+    ogrenci_no: document.getElementById('o_ogrenci_no').value.trim(),
+    sinif: document.getElementById('o_sinif').value.trim(),
+    okul: document.getElementById('o_okul').value.trim(),
+    veli_adi: document.getElementById('o_veli_adi').value.trim(),
+    veli_telefon: document.getElementById('o_veli_telefon').value.trim(),
+  };
+  if(!bilgiler.ad_soyad){ alert('Ad Soyad zorunludur.'); return; }
+
+  const btn = document.getElementById('btnOgrenciKaydet');
+  const eskiMetin = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Kaydediliyor...';
+
+  let sonuc;
+  if(duzenlenenOgrenciId){
+    sonuc = await ogrenciGuncelle(duzenlenenOgrenciId, bilgiler);
+  } else {
+    sonuc = await ogrenciEkle(bilgiler);
+  }
+
+  btn.disabled = false; btn.textContent = eskiMetin;
+
+  if(!sonuc){ alert('Kaydedilemedi. Konsolu (F12) kontrol et.'); return; }
+
+  ogrenciFormuSifirla();
+  await ogrenciListesiYukle();
+});
+
 // ============ BAŞLANGIÇ ============
 denemeListesiYukle();
+ogrenciListesiYukle();
 dersGirisCiz();
 </script>
 
