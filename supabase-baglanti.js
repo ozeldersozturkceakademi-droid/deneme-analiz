@@ -7,8 +7,8 @@
 //
 // Supabase projesi oluşunca aşağıdaki iki satırı doldur, gerisi hazır.
 
-const SUPABASE_URL = "BURAYA_PROJECT_URL";       // örn: https://xxxxx.supabase.co
-const SUPABASE_KEY = "BURAYA_ANON_KEY";          // Settings → API → anon public
+const SUPABASE_URL = "https://lksqjpzbozboigplswpt.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxrc3FqcHpib3pib2lncGxzd3B0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMxNjI0MzMsImV4cCI6MjA5ODczODQzM30.POXOwR97RrPLRsKaGxq7kz0RybBriF83K0xoN3rvE8o";
 
 const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
