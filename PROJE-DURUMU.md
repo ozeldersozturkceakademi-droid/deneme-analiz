@@ -88,14 +88,25 @@ bir önceki oturumda eklediğimiz "ham cevap verisi" tablolarına birebir oturuy
 `hamCevaplariKaydet` ve `cevapAnahtariKaydet` fonksiyonları bunun için zaten hazırdı.
 
 ## Bekleyen İşler (sırayla)
-1. **Supabase projesi kurulumu** — Fok'un supabase.com'da yeni proje açması, URL + anon key paylaşması
-2. `supabase-sema.sql`'i SQL Editor'de çalıştırma
-3. `supabase-baglanti.js`'e URL/key girme, dört HTML dosyasındaki sabit örnek veriyi gerçek
-   Supabase sorgularıyla değiştirme
+1. ~~Supabase projesi kurulumu~~ ✅ TAMAMLANDI (04.07.2026) — proje adı `deneme-analiz`,
+   Frankfurt bölgesi, URL: `https://lksqjpzbozboigplswpt.supabase.co`
+2. ~~`supabase-sema.sql`'i SQL Editor'de çalıştırma~~ ✅ TAMAMLANDI — 8 tablo oluşturuldu
+   ("Run without RLS" seçeneğiyle çalıştırıldı, aşağıdaki güvenlik notuna bak)
+3. ~~`supabase-baglanti.js`'e URL/key girme~~ ✅ TAMAMLANDI — gerçek Project URL ve anon key
+   dosyaya işlendi. **Ancak** dört panel dosyası (veli/öğretmen/admin/detay) hâlâ sabit örnek
+   veriyle çalışıyor — bir sonraki adım bu dosyalardaki dummy array'leri `supabase-baglanti.js`
+   fonksiyonlarıyla değiştirmek (örn. `ogrenciSonuclariGetir`, `denemeleriListele` vb.)
 4. Gerçek auth: `kullanicilar` tablosu + şifre doğrulama (giriş ekranının UI'ı hazır, arka planı yok)
-5. GitHub repo oluşturma (SinUs'taki gibi ayrı repo, GitHub Pages)
+5. GitHub repo oluşturma ✅ TAMAMLANDI — `deneme-analiz` reposu, GitHub Pages ile yayında:
+   `https://ozeldersozturkceakademi-droid.github.io/deneme-analiz/`
 6. Domain bağlama: deneme.ozturkceakademi.com için DNS CNAME kaydı + GitHub Pages custom domain
 7. panel.ozturkceakademi.com'a "Deneme Sonuçları" butonu ekleme (mevcut panel reposunda)
+
+**⚠️ GÜVENLİK NOTU (önemli):** Şema "Run without RLS" ile çalıştırıldı, yani Row Level Security
+kapalı — tablolar şu an anon key ile herhangi bir client'tan tam okunabilir/yazılabilir durumda.
+Bu, prototip/geliştirme aşamasında sorun değil, ama **gerçek öğrenci verisi girilmeden önce**
+mutlaka RLS açılıp uygun policy'ler (örn. bir veli sadece kendi öğrencisinin verisini görebilsin)
+yazılmalı. Bu, gerçek auth (madde 4) ile birlikte ele alınacak.
 
 **Not:** Buradan sonrası Supabase projesi olmadan verimli ilerlemiyor — bir sonraki oturumda
 önce Supabase kurulumunu (madde 1-3) bitirmek en doğrusu olur.
