@@ -44,6 +44,7 @@
     position:absolute; right:-40px; top:-60px;
     width:180px; height:180px; border-radius:50%;
     background:radial-gradient(circle, rgba(255,255,255,.10), transparent 70%);
+    pointer-events:none; z-index:0;
   }
   .brand-row{ display:flex; align-items:center; gap:10px; margin-bottom:20px;}
   .brand-mark{
@@ -60,12 +61,13 @@
   .logout-btn{
     position:absolute; top:18px; right:16px; font-size:11px; font-weight:700;
     color:rgba(255,255,255,.75); background:rgba(255,255,255,.12); border:none;
-    padding:7px 12px; border-radius:999px; cursor:pointer;
+    padding:7px 12px; border-radius:999px; cursor:pointer; z-index:2;
   }
 
   /* SUMMARY STRIP */
   .summary-strip{
     max-width:640px; margin:-30px auto 0; padding:0 14px;
+    position:relative; z-index:1;
   }
   .summary-card{
     background:#fff; border-radius:16px; box-shadow:0 6px 20px rgba(15,38,87,.10);
