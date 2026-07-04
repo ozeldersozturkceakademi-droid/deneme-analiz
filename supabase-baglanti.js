@@ -29,6 +29,32 @@ async function ogrenciAra(aramaMetni){
   return data;
 }
 
+async function ogrencileriListele(){
+  const { data, error } = await sb.from('ogrenciler').select('*').order('ad_soyad');
+  if(error){ console.error('ogrencileriListele hatası:', error); return []; }
+  return data;
+}
+
+async function ogrenciEkle(bilgiler){
+  // bilgiler: { ad_soyad, sinif, okul, veli_adi, veli_telefon, ogrenci_no }
+  const { data, error } = await sb.from('ogrenciler').insert([bilgiler]).select();
+  if(error){ console.error('ogrenciEkle hatası:', error); return null; }
+  return data[0];
+}
+
+async function ogrenciGuncelle(ogrenciId, bilgiler){
+  const { data, error } = await sb.from('ogrenciler').update(bilgiler).eq('id', ogrenciId).select();
+  if(error){ console.error('ogrenciGuncelle hatası:', error); return null; }
+  return data[0];
+}
+
+async function ogrenciSil(ogrenciId){
+  // DİKKAT: bu öğrenciye ait tüm deneme_sonuclari da cascade ile silinir (şemada on delete cascade var)
+  const { error } = await sb.from('ogrenciler').delete().eq('id', ogrenciId);
+  if(error){ console.error('ogrenciSil hatası:', error); return false; }
+  return true;
+}
+
 // =====================================================
 // DENEME İŞLEMLERİ
 // =====================================================
@@ -46,6 +72,20 @@ async function denemeleriListele(){
     .order('deneme_tarihi', { ascending: false });
   if(error){ console.error('denemeleriListele hatası:', error); return []; }
   return data;
+}
+
+async function denemeGuncelle(denemeId, bilgiler){
+  // bilgiler: { deneme_adi, yayin, deneme_tarihi, aciklama }
+  const { data, error } = await sb.from('denemeler').update(bilgiler).eq('id', denemeId).select();
+  if(error){ console.error('denemeGuncelle hatası:', error); return null; }
+  return data[0];
+}
+
+async function denemeSil(denemeId){
+  // DİKKAT: bu denemeye ait tüm sonuçlar da cascade ile silinir (şemada on delete cascade var)
+  const { error } = await sb.from('denemeler').delete().eq('id', denemeId);
+  if(error){ console.error('denemeSil hatası:', error); return false; }
+  return true;
 }
 
 // =====================================================
