@@ -181,7 +181,7 @@
   <!-- ================= TAB 1: DENEME OLUŞTUR ================= -->
   <div class="panel active" id="tab-deneme">
     <div class="card">
-      <h3><span class="dot"></span> Yeni Deneme</h3>
+      <h3><span class="dot"></span> <span id="denemeFormBaslik">Yeni Deneme</span></h3>
       <label>Deneme Adı</label>
       <input type="text" id="d_ad" placeholder="ÖZDEBİR LGS-5">
       <label>Yayın</label>
@@ -190,7 +190,10 @@
       <input type="date" id="d_tarih">
       <label>Açıklama (opsiyonel)</label>
       <textarea id="d_aciklama" placeholder="Not..."></textarea>
-      <button class="btn" id="btnDenemeEkle">Deneme Oluştur</button>
+      <div class="btn-row">
+        <button class="btn secondary half" id="btnDenemeIptal" style="display:none;">İptal</button>
+        <button class="btn" id="btnDenemeEkle">Deneme Oluştur</button>
+      </div>
     </div>
 
     <div class="card">
@@ -326,12 +329,19 @@ document.querySelectorAll('.tab').forEach(tab=>{
 });
 
 // ============ TAB 1: DENEME OLUŞTUR (Supabase'e bağlı) ============
-let denemeler = []; // Supabase'ten dolacak: {id, deneme_adi, yayin, deneme_tarihi}
+let denemeler = []; // Supabase'ten dolacak: {id, deneme_adi, yayin, deneme_tarihi, aciklama}
+let duzenlenenDenemeId = null;
 
 async function denemeListesiYukle(){
   const el = document.getElementById('denemeListe');
   el.innerHTML = '<div class="hint">Yükleniyor...</div>';
-  denemeler = await denemeleriListele(); // supabase-baglanti.js — zaten tarihe göre azalan sıralı geliyor
+  try{
+    denemeler = await denemeleriListele(); // supabase-baglanti.js — zaten tarihe göre azalan sıralı geliyor
+  } catch(err){
+    console.error(err);
+    el.innerHTML = '<div class="hint" style="color:var(--danger);">Yüklenemedi: ' + err.message + '</div>';
+    return;
+  }
   denemeListesiCiz();
 }
 
@@ -343,10 +353,54 @@ function denemeListesiCiz(){
   }
   denemeler.forEach(d=>{
     const div = document.createElement('div');
-    div.className = 'mini-list-item';
-    div.innerHTML = `<div><div class="name">${d.deneme_adi}</div><div class="date">${d.yayin || ''}</div></div><div class="date">${formatTarih(d.deneme_tarihi)}</div>`;
+    div.className = 'ogrenci-item';
+    div.innerHTML = `
+      <div class="info">
+        <div class="ad">${d.deneme_adi}</div>
+        <div class="meta">${d.yayin ? d.yayin + ' · ' : ''}${formatTarih(d.deneme_tarihi)}</div>
+      </div>
+      <div class="aksiyon">
+        <button class="btn-duzenle" data-id="${d.id}">Düzenle</button>
+        <button class="btn-sil" data-id="${d.id}">Sil</button>
+      </div>
+    `;
     el.appendChild(div);
   });
+
+  el.querySelectorAll('.btn-duzenle').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const d = denemeler.find(x => x.id === btn.dataset.id);
+      if(!d) return;
+      duzenlenenDenemeId = d.id;
+      document.getElementById('d_ad').value = d.deneme_adi || '';
+      document.getElementById('d_yayin').value = d.yayin || '';
+      document.getElementById('d_tarih').value = d.deneme_tarihi || '';
+      document.getElementById('d_aciklama').value = d.aciklama || '';
+      document.getElementById('denemeFormBaslik').textContent = 'Denemeyi Düzenle';
+      document.getElementById('btnDenemeEkle').textContent = 'Güncelle';
+      document.getElementById('btnDenemeIptal').style.display = 'inline-flex';
+      document.getElementById('d_ad').scrollIntoView({behavior:'smooth', block:'start'});
+    });
+  });
+
+  el.querySelectorAll('.btn-sil').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const d = denemeler.find(x => x.id === btn.dataset.id);
+      if(!d) return;
+      if(!confirm(`"${d.deneme_adi}" silinsin mi? Bu denemeye ait tüm sonuçlar da silinecek.`)) return;
+      btn.textContent = 'Siliniyor...';
+      try{
+        const basarili = await denemeSil(d.id);
+        if(!basarili) throw new Error('Bilinmeyen hata');
+        await denemeListesiYukle();
+      } catch(err){
+        console.error(err);
+        alert('Silinemedi: ' + err.message);
+        btn.textContent = 'Sil';
+      }
+    });
+  });
+
   // manuel giriş sekmesindeki deneme dropdown'ını da güncelle
   const sel = document.getElementById('m_deneme');
   sel.innerHTML = denemeler.map(d=>`<option value="${d.id}">${d.deneme_adi} — ${formatTarih(d.deneme_tarihi)}</option>`).join('');
@@ -357,6 +411,18 @@ function formatTarih(iso){
   return `${d}.${m}.${y}`;
 }
 
+function denemeFormuSifirla(){
+  duzenlenenDenemeId = null;
+  document.getElementById('d_ad').value = '';
+  document.getElementById('d_yayin').value = '';
+  document.getElementById('d_tarih').value = '';
+  document.getElementById('d_aciklama').value = '';
+  document.getElementById('denemeFormBaslik').textContent = 'Yeni Deneme';
+  document.getElementById('btnDenemeEkle').textContent = 'Deneme Oluştur';
+  document.getElementById('btnDenemeIptal').style.display = 'none';
+}
+document.getElementById('btnDenemeIptal').addEventListener('click', denemeFormuSifirla);
+
 document.getElementById('btnDenemeEkle').addEventListener('click', async ()=>{
   const ad = document.getElementById('d_ad').value.trim();
   const yayin = document.getElementById('d_yayin').value.trim();
@@ -365,19 +431,28 @@ document.getElementById('btnDenemeEkle').addEventListener('click', async ()=>{
   if(!ad || !tarih){ alert('Deneme adı ve tarihi zorunludur.'); return; }
 
   const btn = document.getElementById('btnDenemeEkle');
+  const eskiMetin = btn.textContent;
   btn.disabled = true; btn.textContent = 'Kaydediliyor...';
 
-  const sonuc = await denemeOlustur(ad, yayin, tarih, aciklama);
-
-  btn.disabled = false; btn.textContent = 'Deneme Oluştur';
-
-  if(!sonuc){ alert('Deneme kaydedilemedi. Konsolu (F12) kontrol et.'); return; }
-
-  document.getElementById('d_ad').value='';
-  document.getElementById('d_yayin').value='';
-  document.getElementById('d_tarih').value='';
-  document.getElementById('d_aciklama').value='';
-  await denemeListesiYukle();
+  try{
+    if(typeof sb === 'undefined' || !sb){
+      throw new Error('Supabase bağlantısı kurulamadı (sb tanımsız). supabase-baglanti.js dosyasının yüklendiğinden emin ol.');
+    }
+    let sonuc;
+    if(duzenlenenDenemeId){
+      sonuc = await denemeGuncelle(duzenlenenDenemeId, {deneme_adi:ad, yayin, deneme_tarihi:tarih, aciklama});
+    } else {
+      sonuc = await denemeOlustur(ad, yayin, tarih, aciklama);
+    }
+    if(!sonuc){ alert('Deneme kaydedilemedi. Konsolu (F12) kontrol et.'); return; }
+    denemeFormuSifirla();
+    await denemeListesiYukle();
+  } catch(err){
+    console.error(err);
+    alert('Hata oluştu: ' + err.message);
+  } finally {
+    btn.disabled = false; btn.textContent = eskiMetin;
+  }
 });
 
 // ============ TAB 2: MANUEL GİRİŞ ============
@@ -612,7 +687,13 @@ let duzenlenenOgrenciId = null;
 async function ogrenciListesiYukle(){
   const el = document.getElementById('ogrenciListe');
   el.innerHTML = '<div class="hint">Yükleniyor...</div>';
-  ogrenciler = await ogrencileriListele();
+  try{
+    ogrenciler = await ogrencileriListele();
+  } catch(err){
+    console.error(err);
+    el.innerHTML = '<div class="hint" style="color:var(--danger);">Yüklenemedi: ' + err.message + '</div>';
+    return;
+  }
   ogrenciListesiCiz();
 }
 
@@ -662,9 +743,15 @@ function ogrenciListesiCiz(){
       if(!o) return;
       if(!confirm(`${o.ad_soyad} silinsin mi? Bu öğrenciye ait tüm deneme sonuçları da silinecek.`)) return;
       btn.textContent = 'Siliniyor...';
-      const basarili = await ogrenciSil(o.id);
-      if(!basarili){ alert('Silinemedi. Konsolu (F12) kontrol et.'); btn.textContent = 'Sil'; return; }
-      await ogrenciListesiYukle();
+      try{
+        const basarili = await ogrenciSil(o.id);
+        if(!basarili) throw new Error('Bilinmeyen hata');
+        await ogrenciListesiYukle();
+      } catch(err){
+        console.error(err);
+        alert('Silinemedi: ' + err.message);
+        btn.textContent = 'Sil';
+      }
     });
   });
 }
@@ -699,19 +786,25 @@ document.getElementById('btnOgrenciKaydet').addEventListener('click', async ()=>
   const eskiMetin = btn.textContent;
   btn.disabled = true; btn.textContent = 'Kaydediliyor...';
 
-  let sonuc;
-  if(duzenlenenOgrenciId){
-    sonuc = await ogrenciGuncelle(duzenlenenOgrenciId, bilgiler);
-  } else {
-    sonuc = await ogrenciEkle(bilgiler);
+  try{
+    if(typeof sb === 'undefined' || !sb){
+      throw new Error('Supabase bağlantısı kurulamadı (sb tanımsız). supabase-baglanti.js dosyasının yüklendiğinden emin ol.');
+    }
+    let sonuc;
+    if(duzenlenenOgrenciId){
+      sonuc = await ogrenciGuncelle(duzenlenenOgrenciId, bilgiler);
+    } else {
+      sonuc = await ogrenciEkle(bilgiler);
+    }
+    if(!sonuc){ alert('Kaydedilemedi. Konsolu (F12) kontrol et.'); return; }
+    ogrenciFormuSifirla();
+    await ogrenciListesiYukle();
+  } catch(err){
+    console.error(err);
+    alert('Hata oluştu: ' + err.message);
+  } finally {
+    btn.disabled = false; btn.textContent = eskiMetin;
   }
-
-  btn.disabled = false; btn.textContent = eskiMetin;
-
-  if(!sonuc){ alert('Kaydedilemedi. Konsolu (F12) kontrol et.'); return; }
-
-  ogrenciFormuSifirla();
-  await ogrenciListesiYukle();
 });
 
 // ============ BAŞLANGIÇ ============
