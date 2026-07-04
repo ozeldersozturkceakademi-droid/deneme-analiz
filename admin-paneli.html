@@ -8,6 +8,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-baglanti.js"></script>
 <style>
   :root{
     --navy-deep:#0a1a37;
@@ -277,24 +279,31 @@ document.querySelectorAll('.tab').forEach(tab=>{
   });
 });
 
-// ============ TAB 1: DENEME OLUŞTUR ============
-let denemeler = [
-  {ad:"ÖZDEBİR LGS-4", yayin:"ÖZDEBİR", tarih:"2026-04-13"},
-  {ad:"LİMİT LGS-5", yayin:"LİMİT", tarih:"2026-04-07"},
-];
+// ============ TAB 1: DENEME OLUŞTUR (Supabase'e bağlı) ============
+let denemeler = []; // Supabase'ten dolacak: {id, deneme_adi, yayin, deneme_tarihi}
+
+async function denemeListesiYukle(){
+  const el = document.getElementById('denemeListe');
+  el.innerHTML = '<div class="hint">Yükleniyor...</div>';
+  denemeler = await denemeleriListele(); // supabase-baglanti.js — zaten tarihe göre azalan sıralı geliyor
+  denemeListesiCiz();
+}
 
 function denemeListesiCiz(){
   const el = document.getElementById('denemeListe');
   el.innerHTML = '';
-  denemeler.slice().reverse().forEach(d=>{
+  if(denemeler.length === 0){
+    el.innerHTML = '<div class="hint">Henüz kayıtlı deneme yok.</div>';
+  }
+  denemeler.forEach(d=>{
     const div = document.createElement('div');
     div.className = 'mini-list-item';
-    div.innerHTML = `<div><div class="name">${d.ad}</div><div class="date">${d.yayin}</div></div><div class="date">${formatTarih(d.tarih)}</div>`;
+    div.innerHTML = `<div><div class="name">${d.deneme_adi}</div><div class="date">${d.yayin || ''}</div></div><div class="date">${formatTarih(d.deneme_tarihi)}</div>`;
     el.appendChild(div);
   });
   // manuel giriş sekmesindeki deneme dropdown'ını da güncelle
   const sel = document.getElementById('m_deneme');
-  sel.innerHTML = denemeler.slice().reverse().map(d=>`<option>${d.ad} — ${formatTarih(d.tarih)}</option>`).join('');
+  sel.innerHTML = denemeler.map(d=>`<option value="${d.id}">${d.deneme_adi} — ${formatTarih(d.deneme_tarihi)}</option>`).join('');
 }
 function formatTarih(iso){
   if(!iso) return '';
@@ -302,17 +311,27 @@ function formatTarih(iso){
   return `${d}.${m}.${y}`;
 }
 
-document.getElementById('btnDenemeEkle').addEventListener('click', ()=>{
+document.getElementById('btnDenemeEkle').addEventListener('click', async ()=>{
   const ad = document.getElementById('d_ad').value.trim();
   const yayin = document.getElementById('d_yayin').value.trim();
   const tarih = document.getElementById('d_tarih').value;
+  const aciklama = document.getElementById('d_aciklama').value.trim();
   if(!ad || !tarih){ alert('Deneme adı ve tarihi zorunludur.'); return; }
-  denemeler.push({ad, yayin, tarih});
+
+  const btn = document.getElementById('btnDenemeEkle');
+  btn.disabled = true; btn.textContent = 'Kaydediliyor...';
+
+  const sonuc = await denemeOlustur(ad, yayin, tarih, aciklama);
+
+  btn.disabled = false; btn.textContent = 'Deneme Oluştur';
+
+  if(!sonuc){ alert('Deneme kaydedilemedi. Konsolu (F12) kontrol et.'); return; }
+
   document.getElementById('d_ad').value='';
   document.getElementById('d_yayin').value='';
   document.getElementById('d_tarih').value='';
   document.getElementById('d_aciklama').value='';
-  denemeListesiCiz();
+  await denemeListesiYukle();
 });
 
 // ============ TAB 2: MANUEL GİRİŞ ============
@@ -541,7 +560,7 @@ document.getElementById('btnEslestirKaydet').addEventListener('click', ()=>{
 });
 
 // ============ BAŞLANGIÇ ============
-denemeListesiCiz();
+denemeListesiYukle();
 dersGirisCiz();
 </script>
 
