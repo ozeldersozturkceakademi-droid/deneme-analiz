@@ -226,6 +226,80 @@ async function cevapAnahtariKaydet(denemeId, dersId, anahtarArray){
 }
 
 // =====================================================
+// DERSLER
+// =====================================================
+async function derslerListele(){
+  const { data, error } = await sb.from('dersler').select('*').order('sira');
+  if(error){ console.error('derslerListele hatası:', error); return []; }
+  return data;
+}
+
+// =====================================================
+// FOTOĞRAFTAN OKUMA — DERS BAZLI KAYIT (Optik Okuma sayfası bunu kullanır)
+// =====================================================
+// Aynı öğrenci + aynı deneme için birden fazla ders farklı zamanlarda okutulabilir.
+// Bu yüzden önce o öğrenci/deneme için bir deneme_sonuclari satırı var mı diye bakılır,
+// yoksa oluşturulur; ders_sonuclari o satırın altına ders bazlı eklenir/güncellenir.
+async function denemeSonucBulVeyaOlustur(ogrenciId, denemeId, girisYontemi = 'fotograf'){
+  const { data: mevcut, error: e1 } = await sb.from('deneme_sonuclari')
+    .select('*').eq('ogrenci_id', ogrenciId).eq('deneme_id', denemeId).maybeSingle();
+  if(e1){ console.error('denemeSonucBulVeyaOlustur (sorgu) hatası:', e1); return null; }
+  if(mevcut) return mevcut;
+
+  const { data: yeni, error: e2 } = await sb.from('deneme_sonuclari')
+    .insert([{ ogrenci_id: ogrenciId, deneme_id: denemeId, toplam_net: 0, giris_yontemi: girisYontemi }])
+    .select();
+  if(e2){ console.error('denemeSonucBulVeyaOlustur (oluşturma) hatası:', e2); return null; }
+  return yeni[0];
+}
+
+async function dersSonucKaydetVeyaGuncelle(denemeSonucId, dersId, dogru, yanlis, bos){
+  const { data: mevcut, error: e1 } = await sb.from('ders_sonuclari')
+    .select('id').eq('deneme_sonuc_id', denemeSonucId).eq('ders_id', dersId).maybeSingle();
+  if(e1){ console.error('dersSonucKaydetVeyaGuncelle (sorgu) hatası:', e1); return null; }
+
+  if(mevcut){
+    const { error: e2 } = await sb.from('ders_sonuclari')
+      .update({ dogru, yanlis, bos }).eq('id', mevcut.id);
+    if(e2){ console.error('ders_sonuclari güncelleme hatası:', e2); return null; }
+  } else {
+    const { error: e2 } = await sb.from('ders_sonuclari')
+      .insert([{ deneme_sonuc_id: denemeSonucId, ders_id: dersId, dogru, yanlis, bos }]);
+    if(e2){ console.error('ders_sonuclari ekleme hatası:', e2); return null; }
+  }
+  return true;
+}
+
+async function toplamNetYenidenHesapla(denemeSonucId){
+  const { data: dersSonuclari, error: e1 } = await sb.from('ders_sonuclari')
+    .select('dogru, yanlis').eq('deneme_sonuc_id', denemeSonucId);
+  if(e1){ console.error('toplamNetYenidenHesapla (sorgu) hatası:', e1); return null; }
+
+  const toplamNet = dersSonuclari.reduce((acc, d) => acc + (d.dogru - d.yanlis/3), 0);
+  const { error: e2 } = await sb.from('deneme_sonuclari')
+    .update({ toplam_net: toplamNet }).eq('id', denemeSonucId);
+  if(e2){ console.error('toplamNetYenidenHesapla (güncelleme) hatası:', e2); return null; }
+  return toplamNet;
+}
+
+// Fotoğraftan okuma sonrası tek çağrıyla her şeyi kaydeder: deneme_sonuclari (varsa günceller,
+// yoksa oluşturur) + ders_sonuclari (upsert) + toplam_net yeniden hesap + ham cevaplar (opsiyonel).
+async function fotografSonucKaydet(ogrenciId, denemeId, dersId, dogru, yanlis, bos, cevaplarArray = []){
+  const sonuc = await denemeSonucBulVeyaOlustur(ogrenciId, denemeId, 'fotograf');
+  if(!sonuc) throw new Error('Deneme sonucu satırı oluşturulamadı.');
+
+  const basarili = await dersSonucKaydetVeyaGuncelle(sonuc.id, dersId, dogru, yanlis, bos);
+  if(!basarili) throw new Error('Ders sonucu kaydedilemedi.');
+
+  await toplamNetYenidenHesapla(sonuc.id);
+
+  if(cevaplarArray && cevaplarArray.length){
+    await hamCevaplariKaydet(sonuc.id, cevaplarArray);
+  }
+  return sonuc;
+}
+
+// =====================================================
 // OKUYUCU PROFİLİ (sütun eşleştirme hafızası)
 // =====================================================
 async function profilKaydet(profilAdi, dosyaTipi, sutunEslestirme){
