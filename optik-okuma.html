@@ -6,6 +6,8 @@
 <title>Optik Okuma — Admin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   :root{
     --navy-deep:#0a1a37; --navy:#0f2657; --blue:#2b5fc7; --blue-light:#5b8ef5;
@@ -133,11 +135,11 @@
       <option value="">Yükleniyor...</option>
     </select>
     <input type="text" id="o_deneme_yeni" placeholder="Yeni deneme adı..." style="display:none; margin-top:8px;">
+    <input type="date" id="o_deneme_yeni_tarih" style="display:none; margin-top:8px;">
 
     <label>Ders</label>
     <select id="o_ders">
-      <option>Türkçe</option><option>Matematik</option><option>Fen</option>
-      <option>Sosyal</option><option>İngilizce</option><option>Din</option>
+      <option value="">Yükleniyor...</option>
     </select>
 
     <label>Soru Sayısı</label>
@@ -200,9 +202,71 @@
       <div class="ozet-item"><div class="v" id="ozetNet">0,00</div><div class="k">NET</div></div>
     </div>
 
-    <button class="btn" id="btnKaydet">Sonucu Kaydet</button>
+    <div class="btn-row">
+      <button class="btn secondary half" id="btnPDF">PDF Oluştur</button>
+      <button class="btn half" id="btnKaydet">Sonucu Kaydet</button>
+    </div>
   </div>
 
+</div>
+
+<div id="pdfRaporSarmalayici" style="position:fixed; left:-9999px; top:0;">
+  <div id="pdfRapor" style="width:640px; background:#fff; font-family:'Inter',sans-serif;">
+    <div style="background:linear-gradient(135deg,#0a1a37 0%,#0f2657 55%,#2b5fc7 130%); padding:22px 20px 26px; color:#fff;">
+      <div style="margin-bottom:18px;">
+        <div style="font-family:'Manrope',sans-serif; font-weight:700; font-size:13px;">ÖZEL ÖZTÜRKÇE AKADEMİ<br>KİŞİSEL GELİŞİM KURSU</div>
+        <div style="font-size:10.5px; color:rgba(255,255,255,.65);">Deneme Analiz ve Gelişim Takip Sistemi</div>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+        <div>
+          <div style="font-family:'Manrope',sans-serif; font-weight:800; font-size:19px;" id="pdf_ogrenci_adi">—</div>
+          <div style="font-size:11.5px; color:rgba(255,255,255,.7); margin-top:3px;">Optik Okuma Raporu</div>
+        </div>
+        <div style="text-align:right; font-size:11px; color:rgba(255,255,255,.75);">
+          <div style="font-weight:700; color:#fff; font-size:12.5px; margin-bottom:2px;" id="pdf_deneme_adi">—</div>
+          <div id="pdf_tarih">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:20px 20px 8px;">
+      <div>
+        <div style="font-size:11.5px; color:#65748b; text-transform:uppercase; letter-spacing:.6px; font-weight:600;" id="pdf_ders_adi">Ders</div>
+        <div style="font-family:'Manrope',sans-serif; font-weight:800; font-size:38px; color:#0a1a37; line-height:1;" id="pdf_net">0,00</div>
+        <div style="font-size:11px; color:#65748b; margin-top:2px;">NET</div>
+      </div>
+      <div style="display:flex; gap:18px; text-align:center;">
+        <div>
+          <div style="font-family:'Manrope',sans-serif; font-weight:800; font-size:20px; color:#0f9d63;" id="pdf_d">0</div>
+          <div style="font-size:10px; color:#65748b;">DOĞRU</div>
+        </div>
+        <div>
+          <div style="font-family:'Manrope',sans-serif; font-weight:800; font-size:20px; color:#e0473a;" id="pdf_y">0</div>
+          <div style="font-size:10px; color:#65748b;">YANLIŞ</div>
+        </div>
+        <div>
+          <div style="font-family:'Manrope',sans-serif; font-weight:800; font-size:20px; color:#65748b;" id="pdf_b">0</div>
+          <div style="font-size:10px; color:#65748b;">BOŞ</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="font-family:'Manrope',sans-serif; font-weight:700; font-size:13px; color:#0a1a37; padding:12px 20px 10px;">Soru Bazlı Sonuç</div>
+    <table style="width:100%; border-collapse:collapse;">
+      <thead>
+        <tr>
+          <th style="font-size:10.5px; color:#65748b; font-weight:600; text-transform:uppercase; padding:8px 6px 8px 20px; text-align:left; border-bottom:1px solid #e2e8f4;">Soru</th>
+          <th style="font-size:10.5px; color:#65748b; font-weight:600; text-transform:uppercase; padding:8px 6px; text-align:center; border-bottom:1px solid #e2e8f4;">Okunan</th>
+          <th style="font-size:10.5px; color:#65748b; font-weight:600; text-transform:uppercase; padding:8px 6px 8px 6px; text-align:center; border-bottom:1px solid #e2e8f4;">Doğru Cevap</th>
+        </tr>
+      </thead>
+      <tbody id="pdf_soru_tbody"></tbody>
+    </table>
+
+    <div style="text-align:center; font-size:10px; color:#65748b; padding:16px 20px;">
+      Bu rapor Özel Öztürkçe Akademi Kişisel Gelişim Kursu Deneme Analiz Sistemi tarafından oluşturulmuştur.
+    </div>
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -250,12 +314,38 @@ async function ogrenciDropdownDoldur(){
   }
 }
 
+let dersListesi = []; // Supabase'ten: {id, ders_adi, soru_sayisi, sira}
+async function dersDropdownDoldur(){
+  const sel = document.getElementById('o_ders');
+  try{
+    dersListesi = await derslerListele();
+    sel.innerHTML = dersListesi.length
+      ? '<option value="">— Seç —</option>' + dersListesi.map(d=>`<option value="${d.id}">${d.ders_adi}</option>`).join('')
+      : '<option value="">Kayıtlı ders yok</option>';
+  } catch(err){
+    console.error('derslerListele hatası:', err);
+    sel.innerHTML = '<option value="">Yüklenemedi</option>';
+  }
+}
+
 denemeDropdownDoldur();
 ogrenciDropdownDoldur();
+dersDropdownDoldur();
 
 // ============ DENEME SEÇİMİ ============
 document.getElementById('o_deneme').addEventListener('change', e=>{
-  document.getElementById('o_deneme_yeni').style.display = e.target.value === '__yeni__' ? 'block' : 'none';
+  const yeniMi = e.target.value === '__yeni__';
+  document.getElementById('o_deneme_yeni').style.display = yeniMi ? 'block' : 'none';
+  document.getElementById('o_deneme_yeni_tarih').style.display = yeniMi ? 'block' : 'none';
+});
+
+// ============ DERS SEÇİMİ — SORU SAYISINI OTOMATİK DOLDUR ============
+document.getElementById('o_ders').addEventListener('change', e=>{
+  const ders = dersListesi.find(d => d.id === e.target.value);
+  if(ders && ders.soru_sayisi){
+    document.getElementById('o_soru_sayisi').value = ders.soru_sayisi;
+    document.getElementById('o_soru_sayisi').dispatchEvent(new Event('input'));
+  }
 });
 
 // ============ CEVAP ANAHTARI DOĞRULAMA ============
@@ -523,28 +613,116 @@ function ozetHesapla(){
   document.getElementById('ozetNet').textContent = net.toFixed(2).replace('.',',');
 }
 
-// ============ SONUCU KAYDET ============
+// ============ SONUCU KAYDET (gerçek Supabase kaydı) ============
 document.getElementById('btnKaydet').addEventListener('click', async ()=>{
+  const btn = document.getElementById('btnKaydet');
   const ogrenciId = document.getElementById('o_ogrenci').value;
   const denemeSel = document.getElementById('o_deneme').value;
-  const ders = document.getElementById('o_ders').value;
+  const dersId = document.getElementById('o_ders').value;
 
-  if(!ogrenciId || !denemeSel){ alert('Öğrenci ve deneme seçilmeden kaydedilemez.'); return; }
+  if(!ogrenciId){ alert('Önce öğrenci seç.'); return; }
+  if(!denemeSel){ alert('Önce deneme seç.'); return; }
+  if(!dersId){ alert('Önce ders seç.'); return; }
+  if(!sonuclarState.length){ alert('Önce optik formu okut.'); return; }
 
-  let denemeAdi = document.getElementById('o_deneme_yeni').value.trim();
-  let ogrenciAdi = document.getElementById('o_ogrenci').selectedOptions[0]?.textContent || '';
-  if(denemeSel !== '__yeni__'){
-    denemeAdi = document.getElementById('o_deneme').selectedOptions[0]?.textContent || '';
+  const eskiMetin = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Kaydediliyor...';
+
+  try{
+    let gercekDenemeId = denemeSel;
+
+    if(denemeSel === '__yeni__'){
+      const yeniAd = document.getElementById('o_deneme_yeni').value.trim();
+      const yeniTarih = document.getElementById('o_deneme_yeni_tarih').value;
+      if(!yeniAd || !yeniTarih){ alert('Yeni deneme için ad ve tarih gir.'); btn.disabled = false; btn.textContent = eskiMetin; return; }
+      const yeniDeneme = await denemeOlustur(yeniAd, null, yeniTarih, null);
+      if(!yeniDeneme) throw new Error('Yeni deneme oluşturulamadı.');
+      gercekDenemeId = yeniDeneme.id;
+      await denemeDropdownDoldur();
+      document.getElementById('o_deneme').value = gercekDenemeId;
+      document.getElementById('o_deneme_yeni').style.display = 'none';
+      document.getElementById('o_deneme_yeni_tarih').style.display = 'none';
+    }
+
+    let d=0, y=0, b=0;
+    sonuclarState.forEach(s=>{
+      if(s.okunan === 'Boş') b++;
+      else if(s.okunan === s.dogruCevap) d++;
+      else y++;
+    });
+
+    const cevaplarArray = sonuclarState.map(s => ({
+      ders_id: dersId,
+      soru_no: s.soru_no,
+      verilen_cevap: s.okunan === 'Boş' ? null : s.okunan
+    }));
+
+    await fotografSonucKaydet(ogrenciId, gercekDenemeId, dersId, d, y, b, cevaplarArray);
+
+    alert('Sonuç kaydedildi. Öğrencinin bu denemedeki toplam neti güncellendi.');
+  } catch(err){
+    console.error(err);
+    alert('Kaydedilemedi: ' + err.message);
+  } finally {
+    btn.disabled = false; btn.textContent = eskiMetin;
   }
+});
 
-  alert(
-    `Prototip: sonuç kaydedildi.\n\n` +
-    `Öğrenci: ${ogrenciAdi}\nDeneme: ${denemeAdi}\nDers: ${ders}\n` +
-    `D:${document.getElementById('ozetD').textContent} Y:${document.getElementById('ozetY').textContent} ` +
-    `B:${document.getElementById('ozetB').textContent} Net:${document.getElementById('ozetNet').textContent}\n\n` +
-    `Gerçek sürümde: ders_sonuclari (D/Y/B/Net) + ogrenci_cevaplari (her sorunun ham cevabı) ` +
-    `tablolarına aynı anda yazılacak — sonucKaydet() ve hamCevaplariKaydet() fonksiyonları bunun için hazır.`
-  );
+// ============ PDF OLUŞTUR (Supabase'den bağımsız çalışır) ============
+document.getElementById('btnPDF').addEventListener('click', async ()=>{
+  const btn = document.getElementById('btnPDF');
+  const ogrenciSel = document.getElementById('o_ogrenci');
+  const denemeSel = document.getElementById('o_deneme');
+  const dersSel = document.getElementById('o_ders');
+
+  const ogrenciAdi = ogrenciSel.selectedOptions[0]?.textContent || '—';
+  const denemeAdi = denemeSel.value === '__yeni__'
+    ? (document.getElementById('o_deneme_yeni').value.trim() || '—')
+    : (denemeSel.selectedOptions[0]?.textContent || '—');
+  const dersAdi = dersSel.selectedOptions[0]?.textContent || '—';
+
+  document.getElementById('pdf_ogrenci_adi').textContent = ogrenciAdi;
+  document.getElementById('pdf_deneme_adi').textContent = denemeAdi;
+  document.getElementById('pdf_ders_adi').textContent = dersAdi;
+  document.getElementById('pdf_tarih').textContent = new Date().toLocaleDateString('tr-TR');
+  document.getElementById('pdf_d').textContent = document.getElementById('ozetD').textContent;
+  document.getElementById('pdf_y').textContent = document.getElementById('ozetY').textContent;
+  document.getElementById('pdf_b').textContent = document.getElementById('ozetB').textContent;
+  document.getElementById('pdf_net').textContent = document.getElementById('ozetNet').textContent;
+
+  const tbody = document.getElementById('pdf_soru_tbody');
+  tbody.innerHTML = '';
+  sonuclarState.forEach(s=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="padding:7px 6px 7px 20px; font-size:12.5px; border-bottom:1px solid #eef3fb;">${s.soru_no}</td>
+      <td style="padding:7px 6px; font-size:12.5px; text-align:center; font-weight:700; color:${s.okunan===s.dogruCevap ? '#0f9d63' : (s.okunan==='Boş' ? '#65748b' : '#e0473a')}; border-bottom:1px solid #eef3fb;">${s.okunan}</td>
+      <td style="padding:7px 6px; font-size:12.5px; text-align:center; border-bottom:1px solid #eef3fb;">${s.dogruCevap}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  const eskiMetin = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Hazırlanıyor...';
+
+  try{
+    const rapor = document.getElementById('pdfRapor');
+    const canvas = await html2canvas(rapor, {scale:2, backgroundColor:'#ffffff'});
+    const imgData = canvas.toDataURL('image/png');
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('p','mm','a4');
+    const pageWidth = 210;
+    const imgWidth = pageWidth - 20;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
+    const dosyaAdi = `optik-sonuc-${ogrenciAdi.split(' — ')[0].replace(/\s+/g,'-')}.pdf`;
+    pdf.save(dosyaAdi);
+  } catch(err){
+    console.error(err);
+    alert('PDF oluşturulamadı: ' + err.message);
+  } finally {
+    btn.disabled = false; btn.textContent = eskiMetin;
+  }
 });
 </script>
 
