@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cevap Anahtarı — Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy-deep:#0a1a37; --navy:#0f2657; --blue:#2b5fc7; --blue-light:#5b8ef5;
+    --ice:#eef3fb; --ice-2:#f6f9fd; --ink:#101828; --muted:#65748b; --line:#e2e8f4;
+    --success:#0f9d63; --success-bg:#e6f7ef; --danger:#e0473a; --danger-bg:#fdeceb;
+    --warn:#c47d10; --warn-bg:#fdf3e2; --radius:14px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{ font-family:'Inter',sans-serif; background:var(--ice-2); color:var(--ink); -webkit-font-smoothing:antialiased;}
+
+  .topband{
+    background:linear-gradient(135deg, var(--navy-deep) 0%, var(--navy) 55%, var(--blue) 130%);
+    padding:18px 18px 20px; color:#fff; position:relative;
+  }
+  .logout-btn{
+    position:absolute; top:18px; right:16px; font-size:11px; font-weight:700;
+    color:rgba(255,255,255,.75); background:rgba(255,255,255,.12); border:none;
+    padding:7px 12px; border-radius:999px; cursor:pointer;
+  }
+  .back-link{
+    position:absolute; top:18px; left:16px; font-size:11px; font-weight:700;
+    color:rgba(255,255,255,.75); background:rgba(255,255,255,.12); border:none;
+    padding:7px 12px; border-radius:999px; cursor:pointer; text-decoration:none;
+  }
+  .brand-row{ display:flex; align-items:center; gap:10px; margin-top:6px;}
+  .brand-name{ font-family:'Manrope',sans-serif; font-weight:700; font-size:11px; line-height:1.3;}
+  .brand-tag{ font-size:9.5px; color:rgba(255,255,255,.6);}
+  .page-title{ font-family:'Manrope',sans-serif; font-weight:800; font-size:19px; margin-top:14px;}
+  .page-sub{ font-size:12px; color:rgba(255,255,255,.7); margin-top:2px;}
+
+  .wrap{ max-width:640px; margin:0 auto; padding:18px 14px 60px;}
+
+  .card{ background:#fff; border:1px solid var(--line); border-radius:var(--radius); padding:16px; margin-bottom:14px; box-shadow:0 1px 3px rgba(15,38,87,.05);}
+  .card h3{ font-family:'Manrope',sans-serif; font-size:14px; font-weight:700; color:var(--navy-deep); margin-bottom:12px; display:flex; align-items:center; gap:7px;}
+  .card h3 .dot{ width:6px; height:6px; border-radius:50%; background:var(--blue);}
+  .card h3 .step{ width:20px; height:20px; border-radius:50%; background:var(--navy-deep); color:#fff; font-size:10.5px; display:flex; align-items:center; justify-content:center; font-weight:800;}
+
+  label{ font-size:11.5px; font-weight:600; color:var(--muted); display:block; margin-bottom:5px; margin-top:12px;}
+  label:first-of-type{ margin-top:0;}
+  input[type=text], input[type=number], input[type=date], select{
+    width:100%; border:1px solid var(--line); border-radius:10px; padding:10px 12px;
+    font-size:13.5px; font-family:'Inter',sans-serif; color:var(--ink); background:var(--ice-2);
+  }
+  input:focus, select:focus{ outline:none; border-color:var(--blue); background:#fff;}
+  input.mono{ font-family:monospace; letter-spacing:1px;}
+
+  .hint{ font-size:11px; color:var(--muted); margin-top:6px; line-height:1.5;}
+  .hint.warn{ color:var(--warn);}
+  .hint.ok{ color:var(--success);}
+
+  .btn{ display:inline-flex; align-items:center; justify-content:center; gap:6px; background:var(--navy-deep); color:#fff;
+    border:none; padding:12px 18px; border-radius:10px; font-weight:700; font-size:13.5px; cursor:pointer; width:100%; margin-top:14px;}
+  .btn:active{ opacity:.85;}
+  .btn:disabled{ background:var(--line); color:var(--muted); cursor:not-allowed;}
+  .btn.secondary{ background:var(--ice); color:var(--navy);}
+  .btn.half{ width:calc(50% - 4px);}
+  .btn-row{ display:flex; gap:8px; margin-top:14px;}
+  .btn-row .btn{ margin-top:0;}
+
+  /* DERS KARTLARI */
+  .ders-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+  .ders-kart{
+    border:1.5px solid var(--line); border-radius:12px; padding:11px 12px; cursor:pointer; background:var(--ice-2);
+    transition:border-color .15s;
+  }
+  .ders-kart.secili{ border-color:var(--blue); background:#fff;}
+  .ders-kart .ad{ font-size:12.5px; font-weight:700; color:var(--navy-deep);}
+  .ders-kart .durum{ font-size:10.5px; margin-top:4px; font-weight:600;}
+  .ders-kart .durum.kayitli{ color:var(--success);}
+  .ders-kart .durum.bos{ color:var(--muted);}
+
+  /* SEKME */
+  .sekme-row{ display:flex; gap:6px; margin-top:14px; margin-bottom:4px;}
+  .sekme-btn{
+    flex:1; text-align:center; padding:9px 8px; border-radius:9px; font-size:12.5px; font-weight:700;
+    background:var(--ice); color:var(--muted); cursor:pointer; border:1.5px solid transparent;
+  }
+  .sekme-btn.aktif{ background:#fff; color:var(--navy); border-color:var(--blue);}
+  .sekme-panel{ display:none;}
+  .sekme-panel.aktif{ display:block;}
+
+  .dropzone{
+    border:2px dashed var(--line); border-radius:12px; padding:22px 14px;
+    text-align:center; color:var(--muted); font-size:12.5px; cursor:pointer; background:var(--ice-2);
+  }
+  .dropzone strong{ color:var(--navy); display:block; margin-bottom:4px; font-size:13.5px;}
+
+  .canvas-wrap{ position:relative; margin-top:12px; border-radius:12px; overflow:hidden; border:1px solid var(--line); display:none;}
+  #kalibrasyonCanvas{ display:block; width:100%; height:auto; cursor:crosshair; touch-action:none;}
+
+  .kalib-status{
+    display:flex; justify-content:space-between; align-items:center; margin-top:10px;
+    font-size:11.5px; color:var(--muted); font-weight:600;
+  }
+  .kalib-dots{ display:flex; gap:4px;}
+  .kalib-dot{ width:9px; height:9px; border-radius:50%; background:var(--line);}
+  .kalib-dot.done{ background:var(--success);}
+
+  table.sonuc-tablo{ width:100%; border-collapse:collapse; font-size:12.5px;}
+  table.sonuc-tablo th{
+    text-align:left; padding:7px 6px; font-size:10px; text-transform:uppercase; letter-spacing:.3px;
+    color:var(--muted); border-bottom:1px solid var(--line);
+  }
+  table.sonuc-tablo td{ padding:7px 6px; border-bottom:1px solid var(--ice); vertical-align:middle;}
+  table.sonuc-tablo tr.uyari td{ background:var(--warn-bg);}
+  .guven-bar{ width:50px; height:5px; background:var(--ice); border-radius:3px; overflow:hidden; display:inline-block; vertical-align:middle; margin-right:5px;}
+  .guven-bar-fill{ height:100%; background:var(--success);}
+  .guven-bar-fill.dusuk{ background:var(--warn);}
+  table.sonuc-tablo select{ padding:5px 6px; font-size:12px; width:auto;}
+  .badge-uyari{ font-size:9px; font-weight:700; color:var(--warn); background:var(--warn-bg); padding:2px 6px; border-radius:999px; margin-left:4px;}
+</style>
+</head>
+<body>
+
+<div class="topband">
+  <a href="admin-paneli.html" class="back-link">‹ Admin</a>
+  <button class="logout-btn" id="btnCikis">Çıkış Yap</button>
+  <div class="brand-row">
+    <div>
+      <div class="brand-name">ÖZEL ÖZTÜRKÇE AKADEMİ<br>KİŞİSEL GELİŞİM KURSU</div>
+      <div class="brand-tag">Deneme Analiz Sistemi — Admin</div>
+    </div>
+  </div>
+  <div class="page-title">Cevap Anahtarı</div>
+  <div class="page-sub">Deneme ve ders seç, cevap anahtarını bir kere kaydet — optik okuma ve manuel girişte otomatik kullanılır</div>
+</div>
+
+<div class="wrap">
+
+  <!-- ADIM 1: DENEME SEÇ -->
+  <div class="card">
+    <h3><span class="step">1</span> Deneme</h3>
+    <label>Deneme</label>
+    <select id="ca_deneme">
+      <option value="">Yükleniyor...</option>
+    </select>
+    <input type="text" id="ca_deneme_yeni" placeholder="Yeni deneme adı..." style="display:none; margin-top:8px;">
+    <input type="date" id="ca_deneme_yeni_tarih" style="display:none; margin-top:8px;">
+    <button class="btn secondary" id="btnYeniDenemeOlustur" style="display:none;">Bu Denemeyi Oluştur</button>
+  </div>
+
+  <!-- ADIM 2: DERS SEÇ -->
+  <div class="card" id="dersKartCard" style="display:none;">
+    <h3><span class="step">2</span> Ders Seç</h3>
+    <div class="hint" style="margin-bottom:10px;">✅ işaretli dersler için anahtar zaten kayıtlı — üzerine tıklayıp güncelleyebilirsin.</div>
+    <div class="ders-grid" id="dersGrid"></div>
+  </div>
+
+  <!-- ADIM 3: ANAHTAR GİRİŞİ -->
+  <div class="card" id="girisCard" style="display:none;">
+    <h3><span class="dot"></span> <span id="girisBaslik">Cevap Anahtarı Girişi</span></h3>
+
+    <div class="sekme-row">
+      <div class="sekme-btn aktif" id="sekmeManuelBtn">✏️ Manuel Gir</div>
+      <div class="sekme-btn" id="sekmeFotoBtn">📷 Fotoğraftan Oku</div>
+    </div>
+
+    <!-- MANUEL PANEL -->
+    <div class="sekme-panel aktif" id="panelManuel">
+      <label>Soru Sayısı</label>
+      <input type="number" id="ca_soru_sayisi" min="1" max="100" value="20">
+
+      <label>Cevap Anahtarı</label>
+      <input type="text" id="ca_anahtar_metin" class="mono" placeholder="ABCDABCDABCD...">
+      <div class="hint" id="ca_anahtar_hint">Soru sayısı kadar A/B/C/D karakteri gir.</div>
+
+      <button class="btn" id="btnManuelKaydet">Anahtarı Kaydet</button>
+    </div>
+
+    <!-- FOTOĞRAF PANEL -->
+    <div class="sekme-panel" id="panelFoto">
+      <label>Soru Sayısı</label>
+      <input type="number" id="f_soru_sayisi" min="1" max="100" value="20">
+
+      <div class="dropzone" id="dropzone">
+        <strong>Cevap anahtarı fotoğrafı seç veya sürükle</strong>
+        Yayının resmi cevap anahtarı kağıdının net bir karesi
+      </div>
+      <input type="file" id="fileInput" accept="image/*" style="display:none;">
+
+      <div class="canvas-wrap" id="canvasWrap">
+        <canvas id="kalibrasyonCanvas"></canvas>
+      </div>
+      <div class="kalib-status" id="kalibStatus" style="display:none;">
+        <span id="kalibMetin">Cevap kutucuk alanının 4 köşesine sırayla tıkla: Sol Üst → Sağ Üst → Sağ Alt → Sol Alt</span>
+        <div class="kalib-dots">
+          <div class="kalib-dot" id="dot0"></div><div class="kalib-dot" id="dot1"></div>
+          <div class="kalib-dot" id="dot2"></div><div class="kalib-dot" id="dot3"></div>
+        </div>
+      </div>
+
+      <div class="btn-row" id="kalibBtnRow" style="display:none;">
+        <button class="btn secondary half" id="btnKalibSifirla">Kalibrasyonu Sıfırla</button>
+        <button class="btn half" id="btnOku" disabled>Oku</button>
+      </div>
+
+      <div id="fotoSonucAlani" style="display:none; margin-top:14px;">
+        <div class="hint">Düşük güvenli veya çift işaretli satırlar sarı ile işaretlidir — açılır menüden düzelt.</div>
+        <div style="overflow-x:auto; margin-top:8px;">
+          <table class="sonuc-tablo">
+            <thead><tr><th>Soru</th><th>Okunan</th><th>Güven</th><th>Düzelt</th></tr></thead>
+            <tbody id="fotoSonucTbody"></tbody>
+          </table>
+        </div>
+        <button class="btn" id="btnFotoKaydet">Bu Okumayı Anahtar Olarak Kaydet</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-baglanti.js"></script>
+<script>
+// ============ AUTH GUARD ============
+(function(){
+  const rol = sessionStorage.getItem('deneme_kullanici_rol');
+  const kadi = sessionStorage.getItem('deneme_kullanici_adi');
+  if(!rol || !kadi || rol !== 'admin'){ window.location.href = 'giris.html'; return; }
+})();
+document.getElementById('btnCikis').addEventListener('click', ()=>{
+  sessionStorage.removeItem('deneme_kullanici_rol');
+  sessionStorage.removeItem('deneme_kullanici_adi');
+  window.location.href = 'giris.html';
+});
+
+// ============ DENEME DROPDOWN ============
+async function denemeDropdownDoldur(seciliId){
+  const sel = document.getElementById('ca_deneme');
+  try{
+    const denemeler = await denemeleriListele();
+    const secenekler = denemeler.map(d=>{
+      const [y,m,gg] = (d.deneme_tarihi || '').split('-');
+      const tarihStr = (y && m && gg) ? `${gg}.${m}.${y}` : '';
+      return `<option value="${d.id}">${d.deneme_adi}${tarihStr ? ' — ' + tarihStr : ''}</option>`;
+    }).join('');
+    sel.innerHTML = '<option value="">— Seç —</option>' + secenekler + '<option value="__yeni__">+ Yeni Deneme Ekle</option>';
+    if(seciliId) sel.value = seciliId;
+  } catch(err){
+    console.error('denemeleriListele hatası:', err);
+    sel.innerHTML = '<option value="">Yüklenemedi</option><option value="__yeni__">+ Yeni Deneme Ekle</option>';
+  }
+}
+denemeDropdownDoldur();
+
+document.getElementById('ca_deneme').addEventListener('change', e=>{
+  const yeniMi = e.target.value === '__yeni__';
+  document.getElementById('ca_deneme_yeni').style.display = yeniMi ? 'block' : 'none';
+  document.getElementById('ca_deneme_yeni_tarih').style.display = yeniMi ? 'block' : 'none';
+  document.getElementById('btnYeniDenemeOlustur').style.display = yeniMi ? 'block' : 'none';
+  document.getElementById('dersKartCard').style.display = 'none';
+  document.getElementById('girisCard').style.display = 'none';
+  if(e.target.value && !yeniMi){
+    dersKartlariniYukle(e.target.value);
+  }
+});
+
+document.getElementById('btnYeniDenemeOlustur').addEventListener('click', async ()=>{
+  const btn = document.getElementById('btnYeniDenemeOlustur');
+  const ad = document.getElementById('ca_deneme_yeni').value.trim();
+  const tarih = document.getElementById('ca_deneme_yeni_tarih').value;
+  if(!ad || !tarih){ alert('Deneme adı ve tarihi gir.'); return; }
+  btn.disabled = true; btn.textContent = 'Oluşturuluyor...';
+  try{
+    const yeni = await denemeOlustur(ad, null, tarih, null);
+    if(!yeni) throw new Error('Oluşturulamadı.');
+    await denemeDropdownDoldur(yeni.id);
+    document.getElementById('ca_deneme_yeni').style.display = 'none';
+    document.getElementById('ca_deneme_yeni_tarih').style.display = 'none';
+    btn.style.display = 'none';
+    dersKartlariniYukle(yeni.id);
+  } catch(err){
+    console.error(err);
+    alert('Hata: ' + err.message);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Bu Denemeyi Oluştur';
+  }
+});
+
+// ============ DERS KARTLARI ============
+let dersListesi = [];
+let seciliDenemeId = null;
+let seciliDersId = null;
+
+async function dersKartlariniYukle(denemeId){
+  seciliDenemeId = denemeId;
+  seciliDersId = null;
+  document.getElementById('girisCard').style.display = 'none';
+  const card = document.getElementById('dersKartCard');
+  const grid = document.getElementById('dersGrid');
+  card.style.display = 'block';
+  grid.innerHTML = '<div class="hint">Yükleniyor...</div>';
+
+  try{
+    if(!dersListesi.length) dersListesi = await derslerListele();
+    const durum = await cevapAnahtarlariDurumGetir(denemeId);
+
+    grid.innerHTML = dersListesi.map(d=>{
+      const girilenSoru = durum[d.id] || 0;
+      const kayitliMi = girilenSoru > 0 && girilenSoru >= (d.soru_sayisi || girilenSoru);
+      const kismiMi = girilenSoru > 0 && !kayitliMi;
+      return `
+        <div class="ders-kart" data-id="${d.id}">
+          <div class="ad">${kayitliMi ? '✅ ' : ''}${d.ders_adi}</div>
+          <div class="durum ${girilenSoru > 0 ? 'kayitli' : 'bos'}">
+            ${girilenSoru > 0 ? `${girilenSoru}/${d.soru_sayisi} soru girildi${kismiMi ? ' (eksik)' : ''}` : 'Kayıtlı değil'}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    grid.querySelectorAll('.ders-kart').forEach(kart=>{
+      kart.addEventListener('click', ()=> dersSec(kart.dataset.id));
+    });
+  } catch(err){
+    console.error(err);
+    grid.innerHTML = '<div class="hint" style="color:var(--danger);">Yüklenemedi: ' + err.message + '</div>';
+  }
+}
+
+async function dersSec(dersId){
+  seciliDersId = dersId;
+  document.querySelectorAll('.ders-kart').forEach(k=> k.classList.toggle('secili', k.dataset.id === dersId));
+
+  const ders = dersListesi.find(d => d.id === dersId);
+  document.getElementById('girisBaslik').textContent = `${ders.ders_adi} — Cevap Anahtarı Girişi`;
+  document.getElementById('ca_soru_sayisi').value = ders.soru_sayisi || 20;
+  document.getElementById('f_soru_sayisi').value = ders.soru_sayisi || 20;
+  document.getElementById('girisCard').style.display = 'block';
+
+  // mevcut anahtar varsa manuel kutuya otomatik doldur (düzenleme kolaylığı)
+  document.getElementById('ca_anahtar_metin').value = 'Yükleniyor...';
+  try{
+    const mevcut = await cevapAnahtariGetir(seciliDenemeId, dersId);
+    if(mevcut.length){
+      const metin = mevcut.map(m => m.dogru_cevap || '').join('');
+      document.getElementById('ca_anahtar_metin').value = metin;
+    } else {
+      document.getElementById('ca_anahtar_metin').value = '';
+    }
+  } catch(err){
+    console.error(err);
+    document.getElementById('ca_anahtar_metin').value = '';
+  }
+  anahtarDogrula();
+  document.getElementById('girisCard').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+// ============ SEKME GEÇİŞİ ============
+document.getElementById('sekmeManuelBtn').addEventListener('click', ()=>{
+  document.getElementById('sekmeManuelBtn').classList.add('aktif');
+  document.getElementById('sekmeFotoBtn').classList.remove('aktif');
+  document.getElementById('panelManuel').classList.add('aktif');
+  document.getElementById('panelFoto').classList.remove('aktif');
+});
+document.getElementById('sekmeFotoBtn').addEventListener('click', ()=>{
+  document.getElementById('sekmeFotoBtn').classList.add('aktif');
+  document.getElementById('sekmeManuelBtn').classList.remove('aktif');
+  document.getElementById('panelFoto').classList.add('aktif');
+  document.getElementById('panelManuel').classList.remove('aktif');
+});
+
+// ============ MANUEL: CEVAP ANAHTARI DOĞRULAMA ============
+const soruInput = document.getElementById('ca_soru_sayisi');
+const anahtarInput = document.getElementById('ca_anahtar_metin');
+const anahtarHint = document.getElementById('ca_anahtar_hint');
+
+function anahtarDogrula(){
+  const soruSayisi = parseInt(soruInput.value) || 0;
+  const anahtar = anahtarInput.value.trim().toUpperCase();
+  const gecerliKarakterler = /^[ABCD]*$/.test(anahtar);
+
+  if(!gecerliKarakterler){
+    anahtarHint.textContent = 'Sadece A, B, C, D karakterleri kullanılabilir.';
+    anahtarHint.className = 'hint warn';
+    return false;
+  }
+  if(anahtar.length !== soruSayisi){
+    anahtarHint.textContent = `${anahtar.length}/${soruSayisi} karakter girildi.`;
+    anahtarHint.className = 'hint warn';
+    return false;
+  }
+  anahtarHint.textContent = `${soruSayisi} soruluk cevap anahtarı tamam.`;
+  anahtarHint.className = 'hint ok';
+  return true;
+}
+soruInput.addEventListener('input', anahtarDogrula);
+anahtarInput.addEventListener('input', anahtarDogrula);
+
+document.getElementById('btnManuelKaydet').addEventListener('click', async ()=>{
+  const btn = document.getElementById('btnManuelKaydet');
+  if(!seciliDenemeId || !seciliDersId){ alert('Önce deneme ve ders seç.'); return; }
+  if(!anahtarDogrula()){ alert('Cevap anahtarını kontrol et.'); return; }
+
+  const anahtar = anahtarInput.value.trim().toUpperCase();
+  const anahtarArray = anahtar.split('').map((harf, i) => ({ soru_no: i+1, dogru_cevap: harf }));
+
+  btn.disabled = true; btn.textContent = 'Kaydediliyor...';
+  try{
+    const basarili = await cevapAnahtariKaydet(seciliDenemeId, seciliDersId, anahtarArray);
+    if(!basarili) throw new Error('Bilinmeyen hata');
+    alert('Cevap anahtarı kaydedildi.');
+    await dersKartlariniYukle(seciliDenemeId);
+    dersSec(seciliDersId);
+  } catch(err){
+    console.error(err);
+    alert('Kaydedilemedi: ' + err.message);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Anahtarı Kaydet';
+  }
+});
+
+// ============ FOTOĞRAF: KALİBRASYON + OKUMA MOTORU ============
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+const canvas = document.getElementById('kalibrasyonCanvas');
+const ctx = canvas.getContext('2d');
+const canvasWrap = document.getElementById('canvasWrap');
+const kalibStatus = document.getElementById('kalibStatus');
+const kalibBtnRow = document.getElementById('kalibBtnRow');
+const btnOku = document.getElementById('btnOku');
+
+dropzone.addEventListener('click', ()=> fileInput.click());
+fileInput.addEventListener('change', e=>{ if(e.target.files.length) yukle(e.target.files[0]); });
+dropzone.addEventListener('dragover', e=>{ e.preventDefault(); dropzone.style.borderColor='var(--blue)'; });
+dropzone.addEventListener('dragleave', ()=>{ dropzone.style.borderColor='var(--line)'; });
+dropzone.addEventListener('drop', e=>{
+  e.preventDefault(); dropzone.style.borderColor='var(--line)';
+  if(e.dataTransfer.files.length) yukle(e.dataTransfer.files[0]);
+});
+
+let offscreenCanvas, offscreenCtx;
+let dispScale = 1;
+let kalibNoktalari = [];
+
+function yukle(file){
+  const img = new Image();
+  img.onload = ()=>{
+    offscreenCanvas = document.createElement('canvas');
+    offscreenCanvas.width = img.naturalWidth;
+    offscreenCanvas.height = img.naturalHeight;
+    offscreenCtx = offscreenCanvas.getContext('2d');
+    offscreenCtx.drawImage(img, 0, 0);
+
+    const dispW = Math.min(600, img.naturalWidth);
+    const dispH = img.naturalHeight * (dispW / img.naturalWidth);
+    dispScale = img.naturalWidth / dispW;
+    canvas.width = dispW; canvas.height = dispH;
+    ctx.drawImage(img, 0, 0, dispW, dispH);
+
+    canvasWrap.style.display = 'block';
+    kalibStatus.style.display = 'flex';
+    kalibBtnRow.style.display = 'flex';
+    kalibNoktalari = [];
+    guncelleKalibNoktalari();
+    dropzone.querySelector('strong').textContent = file.name;
+  };
+  img.src = URL.createObjectURL(file);
+}
+
+canvas.addEventListener('click', e=>{
+  if(kalibNoktalari.length >= 4) return;
+  const rect = canvas.getBoundingClientRect();
+  const dispX = (e.clientX - rect.left) * (canvas.width / rect.width);
+  const dispY = (e.clientY - rect.top) * (canvas.height / rect.height);
+  kalibNoktalari.push({ x: dispX * dispScale, y: dispY * dispScale });
+  ciz();
+  guncelleKalibNoktalari();
+});
+
+function guncelleKalibNoktalari(){
+  for(let i=0;i<4;i++){
+    document.getElementById('dot'+i).classList.toggle('done', i < kalibNoktalari.length);
+  }
+  btnOku.disabled = kalibNoktalari.length < 4;
+  document.getElementById('kalibMetin').textContent = kalibNoktalari.length < 4
+    ? `Cevap kutucuk alanının 4 köşesine sırayla tıkla: Sol Üst → Sağ Üst → Sağ Alt → Sol Alt (${kalibNoktalari.length}/4)`
+    : 'Kalibrasyon tamam. "Oku" butonuna basabilirsin.';
+}
+
+function ciz(){
+  ctx.clearRect(0,0,canvas.width, canvas.height);
+  ctx.drawImage(offscreenCanvas, 0, 0, canvas.width, canvas.height);
+
+  ctx.fillStyle = '#2b5fc7';
+  ctx.strokeStyle = '#2b5fc7';
+  ctx.lineWidth = 2;
+  const dispPoints = kalibNoktalari.map(p => ({ x: p.x/dispScale, y: p.y/dispScale }));
+  dispPoints.forEach((p,i)=>{
+    ctx.beginPath(); ctx.arc(p.x, p.y, 6, 0, Math.PI*2); ctx.fill();
+    ctx.font = 'bold 11px sans-serif'; ctx.fillText(i+1, p.x+9, p.y-9);
+  });
+  if(dispPoints.length === 4){
+    ctx.beginPath();
+    ctx.moveTo(dispPoints[0].x, dispPoints[0].y);
+    ctx.lineTo(dispPoints[1].x, dispPoints[1].y);
+    ctx.lineTo(dispPoints[2].x, dispPoints[2].y);
+    ctx.lineTo(dispPoints[3].x, dispPoints[3].y);
+    ctx.closePath(); ctx.stroke();
+  }
+}
+
+document.getElementById('btnKalibSifirla').addEventListener('click', ()=>{
+  kalibNoktalari = [];
+  ctx.clearRect(0,0,canvas.width, canvas.height);
+  ctx.drawImage(offscreenCanvas, 0, 0, canvas.width, canvas.height);
+  guncelleKalibNoktalari();
+  document.getElementById('fotoSonucAlani').style.display = 'none';
+});
+
+// ============ OKUMA MOTORU (bilinear grid örnekleme) — cevap anahtarı için "doğru cevap" karşılaştırması yok ============
+function bilinear(TL,TR,BR,BL,u,v){
+  const top = { x: TL.x + (TR.x-TL.x)*u, y: TL.y + (TR.y-TL.y)*u };
+  const bot = { x: BL.x + (BR.x-BL.x)*u, y: BL.y + (BR.y-BL.y)*u };
+  return { x: top.x + (bot.x-top.x)*v, y: top.y + (bot.y-top.y)*v };
+}
+
+function hucreKoyulugu(cx, cy, yariBoyut){
+  const x0 = Math.max(0, Math.round(cx - yariBoyut));
+  const y0 = Math.max(0, Math.round(cy - yariBoyut));
+  const w = Math.min(offscreenCanvas.width - x0, yariBoyut*2);
+  const h = Math.min(offscreenCanvas.height - y0, yariBoyut*2);
+  if(w <= 0 || h <= 0) return 255;
+  const data = offscreenCtx.getImageData(x0, y0, w, h).data;
+  let toplam = 0, adet = 0;
+  for(let i=0; i<data.length; i+=4){
+    toplam += 0.299*data[i] + 0.587*data[i+1] + 0.114*data[i+2];
+    adet++;
+  }
+  const ortalamaParlaklik = toplam / adet;
+  return 255 - ortalamaParlaklik;
+}
+
+let okumaSonuclari = []; // { soru_no, okunan, guven, cakisma }
+
+btnOku.addEventListener('click', ()=>{
+  const soruSayisi = parseInt(document.getElementById('f_soru_sayisi').value);
+  const secenekler = ['A','B','C','D'];
+
+  const [TL, TR, BR, BL] = kalibNoktalari;
+  const hucreGenislik = Math.abs(TR.x - TL.x) / (secenekler.length * soruSayisi);
+  const ornekYariBoyut = Math.max(4, hucreGenislik * 0.3);
+
+  okumaSonuclari = [];
+  const ESIK_KOYU = 55;
+  const ESIK_FARK = 22;
+
+  for(let r=0; r<soruSayisi; r++){
+    const koyluklar = [];
+    for(let c=0; c<secenekler.length; c++){
+      const u = (c + 0.5) / secenekler.length;
+      const v = (r + 0.5) / soruSayisi;
+      const p = bilinear(TL,TR,BR,BL,u,v);
+      koyluklar.push(hucreKoyulugu(p.x, p.y, ornekYariBoyut));
+    }
+    const maxVal = Math.max(...koyluklar);
+    const maxIdx = koyluklar.indexOf(maxVal);
+    const digerMax = Math.max(...koyluklar.filter((_,i)=>i!==maxIdx));
+
+    let okunan, guven, cakisma = false;
+    if(maxVal < ESIK_KOYU){
+      okunan = 'Boş'; guven = 0;
+    } else if((maxVal - digerMax) < ESIK_FARK){
+      okunan = secenekler[maxIdx]; cakisma = true;
+      guven = Math.round(((maxVal - digerMax) / ESIK_FARK) * 40);
+    } else {
+      okunan = secenekler[maxIdx];
+      guven = Math.min(100, Math.round(40 + ((maxVal - digerMax) / 150) * 60));
+    }
+
+    okumaSonuclari.push({ soru_no: r+1, okunan, guven, cakisma });
+  }
+
+  fotoSonucTabloCiz();
+  document.getElementById('fotoSonucAlani').style.display = 'block';
+});
+
+function fotoSonucTabloCiz(){
+  const tbody = document.getElementById('fotoSonucTbody');
+  tbody.innerHTML = '';
+
+  okumaSonuclari.forEach((s, i)=>{
+    const uyariVar = s.cakisma || (s.guven < 45 && s.okunan !== 'Boş');
+    const tr = document.createElement('tr');
+    tr.className = uyariVar ? 'uyari' : '';
+    const guvenSinifi = s.guven < 45 ? 'dusuk' : '';
+
+    const secenekler = ['A','B','C','D','Boş'];
+    const optionsHtml = secenekler.map(op => `<option value="${op}" ${op===s.okunan?'selected':''}>${op}</option>`).join('');
+
+    tr.innerHTML = `
+      <td>${s.soru_no}${s.cakisma ? ' <span class="badge-uyari">çift</span>' : ''}</td>
+      <td><strong>${s.okunan}</strong></td>
+      <td><span class="guven-bar"><span class="guven-bar-fill ${guvenSinifi}" style="width:${s.guven}%"></span></span>${s.guven}%</td>
+      <td><select data-i="${i}">${optionsHtml}</select></td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  document.querySelectorAll('#fotoSonucTbody select').forEach(sel=>{
+    sel.addEventListener('change', e=>{
+      const i = parseInt(e.target.dataset.i);
+      okumaSonuclari[i].okunan = e.target.value;
+      okumaSonuclari[i].guven = 100;
+      okumaSonuclari[i].cakisma = false;
+      fotoSonucTabloCiz();
+    });
+  });
+}
+
+document.getElementById('btnFotoKaydet').addEventListener('click', async ()=>{
+  const btn = document.getElementById('btnFotoKaydet');
+  if(!seciliDenemeId || !seciliDersId){ alert('Önce deneme ve ders seç.'); return; }
+  if(!okumaSonuclari.length){ alert('Önce anahtarı okut.'); return; }
+  if(okumaSonuclari.some(s => s.okunan === 'Boş')){
+    if(!confirm('Bazı sorular "Boş" okundu. Yine de kaydedilsin mi? (Boş bırakılan sorular anahtarsız kalır.)')) return;
+  }
+
+  const anahtarArray = okumaSonuclari
+    .filter(s => s.okunan !== 'Boş')
+    .map(s => ({ soru_no: s.soru_no, dogru_cevap: s.okunan }));
+
+  btn.disabled = true; btn.textContent = 'Kaydediliyor...';
+  try{
+    const basarili = await cevapAnahtariKaydet(seciliDenemeId, seciliDersId, anahtarArray);
+    if(!basarili) throw new Error('Bilinmeyen hata');
+    alert('Cevap anahtarı fotoğraftan okunarak kaydedildi.');
+    await dersKartlariniYukle(seciliDenemeId);
+    dersSec(seciliDersId);
+  } catch(err){
+    console.error(err);
+    alert('Kaydedilemedi: ' + err.message);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Bu Okumayı Anahtar Olarak Kaydet';
+  }
+});
+</script>
+
+</body>
+</html>
