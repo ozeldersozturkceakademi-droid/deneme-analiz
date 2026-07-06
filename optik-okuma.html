@@ -145,7 +145,7 @@
     <label>Soru Sayısı</label>
     <input type="number" id="o_soru_sayisi" min="1" max="100" value="20">
 
-    <label>Cevap Anahtarı</label>
+    <label>Cevap Anahtarı <a href="cevap-anahtari.html" style="font-weight:600; color:var(--blue); text-decoration:none;" target="_blank">(Cevap Anahtarı sayfasından yönet ↗)</a></label>
     <input type="text" id="o_cevap_anahtari" class="mono" placeholder="ABCDABCDABCD...">
     <div class="hint" id="o_anahtar_hint">Soru sayısı kadar A/B/C/D karakteri gir.</div>
   </div>
@@ -346,7 +346,34 @@ document.getElementById('o_ders').addEventListener('change', e=>{
     document.getElementById('o_soru_sayisi').value = ders.soru_sayisi;
     document.getElementById('o_soru_sayisi').dispatchEvent(new Event('input'));
   }
+  cevapAnahtariniOtomatikGetir();
 });
+document.getElementById('o_deneme').addEventListener('change', cevapAnahtariniOtomatikGetir);
+
+// ============ KAYITLI CEVAP ANAHTARINI OTOMATİK ÇEK ============
+async function cevapAnahtariniOtomatikGetir(){
+  const denemeId = document.getElementById('o_deneme').value;
+  const dersId = document.getElementById('o_ders').value;
+  const anahtarInputEl = document.getElementById('o_cevap_anahtari');
+  if(!denemeId || denemeId === '__yeni__' || !dersId){
+    return;
+  }
+  anahtarInputEl.value = 'Yükleniyor...';
+  try{
+    const kayitli = await cevapAnahtariGetir(denemeId, dersId);
+    if(kayitli.length){
+      anahtarInputEl.value = kayitli.map(k => k.dogru_cevap || '').join('');
+      anahtarDogrula();
+    } else {
+      anahtarInputEl.value = '';
+      anahtarHint.textContent = 'Bu ders için kayıtlı cevap anahtarı yok — Cevap Anahtarı sayfasından ekle veya buraya elle gir.';
+      anahtarHint.className = 'hint warn';
+    }
+  } catch(err){
+    console.error(err);
+    anahtarInputEl.value = '';
+  }
+}
 
 // ============ CEVAP ANAHTARI DOĞRULAMA ============
 const soruInput = document.getElementById('o_soru_sayisi');
