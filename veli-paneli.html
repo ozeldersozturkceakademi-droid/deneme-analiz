@@ -6,6 +6,8 @@
 <title>Deneme Sonuçları</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-baglanti.js"></script>
 <style>
   :root{
     --navy-deep:#0a1a37;
@@ -141,25 +143,25 @@
     </div>
   </div>
   <div class="greet" id="greetText">Merhaba, Demir Ailesi</div>
-  <div class="greet-sub">Öğrenci: Öğrenci Adı Soyadı · 8. Sınıf</div>
+  <div class="greet-sub" id="greetSub">Öğrenci: Öğrenci Adı Soyadı · 8. Sınıf</div>
 </div>
 
 <div class="summary-strip">
   <div class="summary-card">
     <div class="summary-item">
-      <div class="v">78,34</div>
+      <div class="v" id="ozetSonNet">—</div>
       <div class="k">SON NET</div>
     </div>
     <div class="summary-item">
-      <div class="v up">+4,25</div>
+      <div class="v" id="ozetSonDegisim">—</div>
       <div class="k">SON DEĞİŞİM</div>
     </div>
     <div class="summary-item">
-      <div class="v">4.</div>
+      <div class="v">—</div>
       <div class="k">KURUM SIRASI</div>
     </div>
     <div class="summary-item">
-      <div class="v">15</div>
+      <div class="v" id="ozetToplamDeneme">—</div>
       <div class="k">TOPLAM DENEME</div>
     </div>
   </div>
@@ -172,9 +174,12 @@
 </div>
 
 <script>
-// ============ AUTH GUARD ============
-// Gerçek sürümde Supabase session kontrolü burada yapılacak.
-(function(){
+// ============ AUTH GUARD + ÖĞRENCİ BULMA ============
+// Veli girişinde kullanıcı adı = öğrenci no (bkz. giris.html). Bu no ile
+// gerçek öğrenci kaydını Supabase'ten buluyoruz.
+let veliOgrenci = null; // { id, ad_soyad, sinif, ogrenci_no, ... }
+
+async function baslat(){
   const rol = sessionStorage.getItem('deneme_kullanici_rol');
   const kadi = sessionStorage.getItem('deneme_kullanici_adi');
   if(!rol || !kadi || rol !== 'veli'){
@@ -182,7 +187,19 @@
     return;
   }
   document.getElementById('greetText').textContent = `Merhaba, ${kadi}`;
-})();
+
+  veliOgrenci = await ogrenciNoIleBul(kadi);
+  if(!veliOgrenci){
+    document.getElementById('greetSub').textContent = 'Öğrenci kaydı bulunamadı (öğrenci no: ' + kadi + ')';
+    document.getElementById('emptyHint').textContent = 'Bu öğrenci no ile eşleşen bir kayıt bulunamadı. Lütfen okulla iletişime geçin.';
+    document.getElementById('emptyHint').style.display = 'block';
+    return;
+  }
+  document.getElementById('greetSub').textContent =
+    `Öğrenci: ${veliOgrenci.ad_soyad}${veliOgrenci.sinif ? ' · ' + veliOgrenci.sinif + '. Sınıf' : ''}`;
+
+  await denemeleriYukle();
+}
 
 document.getElementById('btnCikis').addEventListener('click', ()=>{
   sessionStorage.removeItem('deneme_kullanici_rol');
@@ -190,56 +207,109 @@ document.getElementById('btnCikis').addEventListener('click', ()=>{
   window.location.href = 'giris.html';
 });
 
-// ---- ÖRNEK VERİ (gerçek sürümde Supabase 'gunluk_performans' / deneme sonuç tablosundan çekilecek) ----
-const denemeler = [
-  { ad:"ÖZDEBİR LGS-4", tarih:"13.04.2026", net:78.34, delta:4.25, yayin:"ÖZDEBİR" },
-  { ad:"LİMİT LGS-5", tarih:"07.04.2026", net:66.00, delta:-5.67, yayin:"LİMİT" },
-  { ad:"NFT GELİŞİM İZLEME LGS-3", tarih:"24.03.2026", net:71.67, delta:-3.33, yayin:"NFT" },
-  { ad:"OKYANUS MASTER KTT-3", tarih:"16.03.2026", net:75.00, delta:0.00, yayin:"OKYANUS" },
-  { ad:"AV SÜREÇ İZLEME LGS-4", tarih:"23.02.2026", net:76.33, delta:-0.34, yayin:"AV" },
-];
+// ============ DENEME SONUÇLARI (Supabase'ten gerçek veri) ============
+async function denemeleriYukle(){
+  const list = document.getElementById('examList');
+  list.innerHTML = '<div class="empty-hint">Yükleniyor...</div>';
 
-const list = document.getElementById('examList');
+  const sonuclar = await ogrenciSonuclariGetir(veliOgrenci.id); // en yeni önce sıralı geliyor
+  list.innerHTML = '';
 
-denemeler.forEach(d=>{
-  const card = document.createElement('div');
-  card.className = 'exam-card';
+  if(sonuclar.length === 0){
+    document.getElementById('emptyHint').style.display = 'block';
+    ozetGuncelle(null, sonuclar);
+    return;
+  }
+  document.getElementById('emptyHint').style.display = 'none';
 
-  let pillClass = 'delta-pill';
-  let pillText = '';
-  if(d.delta > 0){ pillText = `▲ +${d.delta.toFixed(2).replace('.',',')}`; }
-  else if(d.delta < 0){ pillClass += ' neg'; pillText = `▼ ${d.delta.toFixed(2).replace('.',',')}`; }
-  else { pillClass += ' flat'; pillText = '— Aynı'; }
+  sonuclar.forEach((sonuc, i)=>{
+    // delta: bir önceki (kronolojik olarak) denemeye göre net değişimi.
+    // sonuclar en yeniden en eskiye sıralı geldiği için "bir önceki deneme" = sonuclar[i+1]
+    const onceki = sonuclar[i+1];
+    const delta = onceki ? (sonuc.toplam_net - onceki.toplam_net) : null;
 
-  card.innerHTML = `
-    <div class="exam-top">
-      <div>
-        <div class="exam-name">${d.ad}</div>
-        <div class="exam-date">${d.tarih}</div>
+    const d = sonuc.denemeler || {};
+    const tarih = d.deneme_tarihi ? formatTarih(d.deneme_tarihi) : '';
+
+    const card = document.createElement('div');
+    card.className = 'exam-card';
+
+    let pillClass = 'delta-pill';
+    let pillText = '';
+    if(delta === null){ pillClass += ' flat'; pillText = '—'; }
+    else if(delta > 0){ pillText = `▲ +${delta.toFixed(2).replace('.',',')}`; }
+    else if(delta < 0){ pillClass += ' neg'; pillText = `▼ ${delta.toFixed(2).replace('.',',')}`; }
+    else { pillClass += ' flat'; pillText = '— Aynı'; }
+
+    card.innerHTML = `
+      <div class="exam-top">
+        <div>
+          <div class="exam-name">${d.deneme_adi || ''}</div>
+          <div class="exam-date">${tarih}</div>
+        </div>
+        <div class="exam-chip">${d.yayin || ''}</div>
       </div>
-      <div class="exam-chip">${d.yayin}</div>
-    </div>
-    <div class="exam-bottom">
-      <div class="net-block">
-        <div class="label">Toplam Net</div>
-        <div class="val">${d.net.toFixed(2).replace('.',',')}</div>
+      <div class="exam-bottom">
+        <div class="net-block">
+          <div class="label">Toplam Net</div>
+          <div class="val">${Number(sonuc.toplam_net).toFixed(2).replace('.',',')}</div>
+        </div>
+        <div class="${pillClass}">${pillText}</div>
       </div>
-      <div class="${pillClass}">${pillText}</div>
-    </div>
-    <div class="detail-link">Detaylı İncele →</div>
-  `;
+      <div class="detail-link">Detaylı İncele →</div>
+    `;
 
-  card.addEventListener('click', ()=>{
-    // Gerçek sürümde: ?id=<deneme_sonuc_id> ile yönlendirilip detay sayfası o veriyi Supabase'ten çekecek
-    window.location.href = 'detay-sayfasi.html';
+    card.addEventListener('click', ()=>{
+      window.location.href = `detay-sayfasi.html?ogrenci_id=${veliOgrenci.id}&deneme_sonuc_id=${sonuc.id}`;
+    });
+
+    list.appendChild(card);
   });
 
-  list.appendChild(card);
-});
-
-if(denemeler.length === 0){
-  document.getElementById('emptyHint').style.display = 'block';
+  ozetGuncelle(sonuclar[0], sonuclar);
 }
+
+function formatTarih(iso){
+  if(!iso) return '';
+  const [y,m,d] = iso.split('-');
+  return `${d}.${m}.${y}`;
+}
+
+// Üstteki özet şeridini (son net, son değişim, toplam deneme) gerçek veriyle doldurur.
+// NOT: "Kurum Sırası" için henüz bir sıralama fonksiyonu yok, o yüzden "—" olarak bırakıldı.
+function ozetGuncelle(sonSonuc, tumSonuclar){
+  const sonNetEl = document.getElementById('ozetSonNet');
+  const sonDegisimEl = document.getElementById('ozetSonDegisim');
+  const toplamEl = document.getElementById('ozetToplamDeneme');
+
+  toplamEl.textContent = tumSonuclar.length;
+
+  if(!sonSonuc){
+    sonNetEl.textContent = '—';
+    sonDegisimEl.textContent = '—';
+    return;
+  }
+
+  sonNetEl.textContent = Number(sonSonuc.toplam_net).toFixed(2).replace('.',',');
+
+  const onceki = tumSonuclar[1];
+  if(!onceki){
+    sonDegisimEl.textContent = '—';
+    return;
+  }
+  const delta = sonSonuc.toplam_net - onceki.toplam_net;
+  sonDegisimEl.classList.remove('up');
+  if(delta > 0){
+    sonDegisimEl.textContent = `+${delta.toFixed(2).replace('.',',')}`;
+    sonDegisimEl.classList.add('up');
+  } else if(delta < 0){
+    sonDegisimEl.textContent = delta.toFixed(2).replace('.',',');
+  } else {
+    sonDegisimEl.textContent = '— Aynı';
+  }
+}
+
+baslat();
 </script>
 
 </body>
