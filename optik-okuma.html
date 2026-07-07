@@ -33,8 +33,6 @@
     padding:7px 12px; border-radius:999px; cursor:pointer; text-decoration:none;
   }
   .brand-row{ display:flex; align-items:center; gap:10px; margin-top:6px;}
-  .brand-mark{ width:32px; height:32px; border-radius:50%; background:#fff; overflow:hidden; flex-shrink:0;}
-  .brand-mark img{ width:100%; height:100%; object-fit:cover;}
   .brand-name{ font-family:'Manrope',sans-serif; font-weight:700; font-size:11px; line-height:1.3;}
   .brand-tag{ font-size:9.5px; color:rgba(255,255,255,.6);}
   .page-title{ font-family:'Manrope',sans-serif; font-weight:800; font-size:19px; margin-top:14px;}
@@ -49,7 +47,7 @@
 
   label{ font-size:11.5px; font-weight:600; color:var(--muted); display:block; margin-bottom:5px; margin-top:12px;}
   label:first-of-type{ margin-top:0;}
-  input[type=text], input[type=number], select{
+  input[type=text], input[type=number], input[type=date], select{
     width:100%; border:1px solid var(--line); border-radius:10px; padding:10px 12px;
     font-size:13.5px; font-family:'Inter',sans-serif; color:var(--ink); background:var(--ice-2);
   }
@@ -59,6 +57,7 @@
   .hint{ font-size:11px; color:var(--muted); margin-top:6px; line-height:1.5;}
   .hint.warn{ color:var(--warn);}
   .hint.ok{ color:var(--success);}
+  .hint.danger{ color:var(--danger);}
 
   .btn{ display:inline-flex; align-items:center; justify-content:center; gap:6px; background:var(--navy-deep); color:#fff;
     border:none; padding:12px 18px; border-radius:10px; font-weight:700; font-size:13.5px; cursor:pointer; width:100%; margin-top:14px;}
@@ -68,6 +67,12 @@
   .btn.half{ width:calc(50% - 4px);}
   .btn-row{ display:flex; gap:8px; margin-top:14px;}
   .btn-row .btn{ margin-top:0;}
+  .link-toggle{ display:block; text-align:center; font-size:12px; font-weight:700; color:var(--blue); margin-top:16px; cursor:pointer; text-decoration:none;}
+
+  .durum-banner{ border-radius:12px; padding:12px 14px; font-size:12.5px; font-weight:600; margin-bottom:14px; line-height:1.5;}
+  .durum-banner.ok{ background:var(--success-bg); color:var(--success);}
+  .durum-banner.warn{ background:var(--warn-bg); color:var(--warn);}
+  .durum-banner a{ color:inherit; text-decoration:underline;}
 
   .dropzone{
     border:2px dashed var(--line); border-radius:12px; padding:22px 14px;
@@ -76,17 +81,16 @@
   .dropzone strong{ color:var(--navy); display:block; margin-bottom:4px; font-size:13.5px;}
 
   .canvas-wrap{ position:relative; margin-top:12px; border-radius:12px; overflow:hidden; border:1px solid var(--line); display:none;}
-  #kalibrasyonCanvas{ display:block; width:100%; height:auto; cursor:crosshair; touch-action:none;}
+  canvas{ display:block; width:100%; height:auto; cursor:crosshair; touch-action:none;}
 
   .kalib-status{
     display:flex; justify-content:space-between; align-items:center; margin-top:10px;
-    font-size:11.5px; color:var(--muted); font-weight:600;
+    font-size:11.5px; color:var(--muted); font-weight:600; gap:8px;
   }
-  .kalib-dots{ display:flex; gap:4px;}
+  .kalib-dots{ display:flex; gap:4px; flex-shrink:0;}
   .kalib-dot{ width:9px; height:9px; border-radius:50%; background:var(--line);}
   .kalib-dot.done{ background:var(--success);}
 
-  /* SONUÇ TABLOSU */
   table.sonuc-tablo{ width:100%; border-collapse:collapse; font-size:12.5px;}
   table.sonuc-tablo th{
     text-align:left; padding:7px 6px; font-size:10px; text-transform:uppercase; letter-spacing:.3px;
@@ -105,7 +109,17 @@
   .ozet-item .v{ font-family:'Manrope',sans-serif; font-weight:800; font-size:16px; color:var(--navy-deep);}
   .ozet-item .k{ font-size:9px; color:var(--muted); font-weight:600; margin-top:2px;}
 
-  .locked{ opacity:.45; pointer-events:none;}
+  .ders-sonuc-kart{ border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin-top:10px;}
+  .ders-sonuc-kart .baslik{ display:flex; justify-content:space-between; align-items:center; cursor:pointer;}
+  .ders-sonuc-kart .baslik .ad{ font-weight:700; font-size:13px; color:var(--navy-deep);}
+  .ders-sonuc-kart .baslik .net{ font-family:'Manrope',sans-serif; font-weight:800; font-size:15px; color:var(--navy-deep);}
+  .ders-sonuc-kart .mini-ozet{ display:flex; gap:12px; font-size:11px; color:var(--muted); margin-top:4px;}
+  .ders-sonuc-kart .detay{ display:none; margin-top:10px;}
+  .ders-sonuc-kart .detay.acik{ display:block;}
+  .ders-sonuc-kart.uyarili{ border-color:var(--warn);}
+  .toplam-net-buyuk{ text-align:center; background:var(--navy-deep); color:#fff; border-radius:12px; padding:16px; margin-top:14px;}
+  .toplam-net-buyuk .v{ font-family:'Manrope',sans-serif; font-weight:800; font-size:32px;}
+  .toplam-net-buyuk .k{ font-size:11px; opacity:.75; margin-top:2px;}
 </style>
 </head>
 <body>
@@ -114,28 +128,92 @@
   <a href="admin-paneli.html" class="back-link">‹ Admin</a>
   <button class="logout-btn" id="btnCikis">Çıkış Yap</button>
   <div class="brand-row">
-    
     <div>
       <div class="brand-name">ÖZEL ÖZTÜRKÇE AKADEMİ<br>KİŞİSEL GELİŞİM KURSU</div>
       <div class="brand-tag">Deneme Analiz Sistemi — Admin</div>
     </div>
   </div>
   <div class="page-title">Optik Okuma</div>
-  <div class="page-sub">Optik form fotoğrafını yükle, sistem tahmin etsin, sen kontrol et</div>
+  <div class="page-sub">Fotoğrafı yükle, sistem okusun, sen kontrol et</div>
 </div>
 
 <div class="wrap">
 
-  <!-- ADIM 1: DENEME BİLGİLERİ -->
+  <!-- ADIM 1: DENEME + ÖĞRENCİ -->
   <div class="card">
-    <h3><span class="step">1</span> Deneme Bilgileri</h3>
+    <h3><span class="step">1</span> Deneme ve Öğrenci</h3>
 
     <label>Deneme</label>
     <select id="o_deneme">
       <option value="">Yükleniyor...</option>
     </select>
     <input type="text" id="o_deneme_yeni" placeholder="Yeni deneme adı..." style="display:none; margin-top:8px;">
+    <input type="text" id="o_deneme_yeni_yayin" placeholder="Yayın adı (Örn: ÖZDEBİR)..." style="display:none; margin-top:8px;">
     <input type="date" id="o_deneme_yeni_tarih" style="display:none; margin-top:8px;">
+
+    <div id="sablonDurumBanner" class="durum-banner" style="display:none;"></div>
+
+    <label>Öğrenci</label>
+    <select id="o_ogrenci">
+      <option value="">Yükleniyor...</option>
+    </select>
+  </div>
+
+  <!-- ================= SABLONLU MOD: COKLU DERS OTOMATIK OKUMA ================= -->
+  <div class="card" id="sabloluModCard" style="display:none;">
+    <h3><span class="dot"></span> Çoklu Ders Okuma (Otomatik)</h3>
+    <div class="hint">Formun tamamının net göründüğü TEK bir fotoğraf yükle — sistem yayının kayıtlı şablonuna göre tüm dersleri aynı anda okur.</div>
+
+    <div class="dropzone" id="dropzoneCoklu" style="margin-top:10px;">
+      <strong>Fotoğraf seç veya sürükle</strong>
+      Formun tamamı, düz açıdan, net bir kare
+    </div>
+    <input type="file" id="fileInputCoklu" accept="image/*" style="display:none;">
+
+    <div class="canvas-wrap" id="canvasWrapCoklu">
+      <canvas id="canvasCoklu"></canvas>
+    </div>
+    <div class="hint" id="cokluKaliteUyari" style="display:none;"></div>
+
+    <div class="btn-row" id="cokluOtomatikBtnRow" style="display:none;">
+      <button class="btn secondary half" id="btnCokluOtomatikAlgila">🪄 Otomatik Algıla</button>
+      <button class="btn half" id="btnCokluElleKalibre">✋ Elle İşaretle</button>
+    </div>
+
+    <div class="kalib-status" id="cokluKalibStatus" style="display:none;">
+      <span id="cokluKalibMetin">Formun 4 dış köşesine sırayla tıkla: Sol Üst → Sağ Üst → Sağ Alt → Sol Alt</span>
+      <div class="kalib-dots">
+        <div class="kalib-dot" id="cdot0"></div><div class="kalib-dot" id="cdot1"></div>
+        <div class="kalib-dot" id="cdot2"></div><div class="kalib-dot" id="cdot3"></div>
+      </div>
+    </div>
+
+    <div class="hint" id="cokluHint"></div>
+
+    <div class="btn-row" id="cokluOkuBtnRow" style="display:none;">
+      <button class="btn secondary half" id="btnCokluSifirla">Sıfırla</button>
+      <button class="btn half" id="btnCokluOku" disabled>Oku (Tüm Dersler)</button>
+    </div>
+
+    <div id="cokluSonucAlani" style="display:none;">
+      <div id="dersSonucListesi"></div>
+      <div class="toplam-net-buyuk">
+        <div class="v" id="cokluToplamNet">0,00</div>
+        <div class="k">TOPLAM NET</div>
+      </div>
+      <div class="btn-row">
+        <button class="btn secondary half" id="btnCokluPDF">PDF Oluştur</button>
+        <button class="btn half" id="btnCokluKaydet">Tümünü Kaydet</button>
+      </div>
+    </div>
+  </div>
+
+  <a class="link-toggle" id="manuelModAcLink" style="display:none;">Diğer seçenek: Tek ders için elle kalibrasyon kullan ↓</a>
+
+  <!-- ================= MANUEL MOD: TEK DERS (ESKI AKIS, YEDEK) ================= -->
+  <div class="card" id="manuelModCard" style="display:none;">
+    <h3><span class="dot"></span> Tek Ders — Elle Kalibrasyon</h3>
+    <div class="hint">Bu yayın için henüz otomatik şablon yoksa (veya tek bir dersi tekrar okutmak istersen) bu modu kullan.</div>
 
     <label>Ders</label>
     <select id="o_ders">
@@ -150,16 +228,7 @@
     <div class="hint" id="o_anahtar_hint">Soru sayısı kadar A/B/C/D karakteri gir.</div>
   </div>
 
-  <!-- ADIM 2: ÖĞRENCİ -->
-  <div class="card">
-    <h3><span class="step">2</span> Öğrenci Seç</h3>
-    <select id="o_ogrenci">
-      <option value="">Yükleniyor...</option>
-    </select>
-  </div>
-
-  <!-- ADIM 3: FOTOĞRAF + KALİBRASYON -->
-  <div class="card" id="fotoCard">
+  <div class="card" id="fotoCard" style="display:none;">
     <h3><span class="dot"></span> Optik Form Fotoğrafı</h3>
     <div class="dropzone" id="dropzone">
       <strong>Fotoğraf seç veya sürükle</strong>
@@ -170,6 +239,7 @@
     <div class="canvas-wrap" id="canvasWrap">
       <canvas id="kalibrasyonCanvas"></canvas>
     </div>
+    <div class="hint" id="kaliteUyari" style="display:none;"></div>
     <div class="kalib-status" id="kalibStatus" style="display:none;">
       <span id="kalibMetin">Cevap kutucuk alanının 4 köşesine sırayla tıkla: Sol Üst → Sağ Üst → Sağ Alt → Sol Alt</span>
       <div class="kalib-dots">
@@ -184,7 +254,7 @@
     </div>
   </div>
 
-  <!-- ADIM 4: SONUÇ -->
+  <!-- ADIM SONUÇ (manuel mod) -->
   <div class="card" id="sonucCard" style="display:none;">
     <h3><span class="dot"></span> Okuma Sonucu <span class="badge-uyari" id="uyariSayisi" style="display:none;"></span></h3>
     <div class="hint">Düşük güvenli veya çift işaretli satırlar sarı ile işaretlidir — açılır menüden düzelt.</div>
@@ -200,6 +270,7 @@
       <div class="ozet-item"><div class="v" id="ozetY">0</div><div class="k">YANLIŞ</div></div>
       <div class="ozet-item"><div class="v" id="ozetB">0</div><div class="k">BOŞ</div></div>
       <div class="ozet-item"><div class="v" id="ozetNet">0,00</div><div class="k">NET</div></div>
+      <div class="ozet-item"><div class="v" id="ozetGuven">—</div><div class="k">ORT. GÜVEN</div></div>
     </div>
 
     <div class="btn-row">
@@ -251,7 +322,7 @@
       </div>
     </div>
 
-    <div style="font-family:'Manrope',sans-serif; font-weight:700; font-size:13px; color:#0a1a37; padding:12px 20px 10px;">Soru Bazlı Sonuç</div>
+    <div style="font-family:'Manrope',sans-serif; font-weight:700; font-size:13px; color:#0a1a37; padding:12px 20px 10px;" id="pdf_tablo_baslik">Soru Bazlı Sonuç</div>
     <table style="width:100%; border-collapse:collapse;">
       <thead>
         <tr>
@@ -271,6 +342,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-baglanti.js"></script>
+<script src="optik-motor.js"></script>
 <script>
 // ============ AUTH GUARD ============
 (function(){
@@ -284,20 +356,26 @@ document.getElementById('btnCikis').addEventListener('click', ()=>{
   window.location.href = 'giris.html';
 });
 
-// ============ DENEME VE ÖĞRENCİ LİSTELERİNİ SUPABASE'TEN ÇEK ============
-async function denemeDropdownDoldur(){
+// ============ DENEME / OGRENCI / DERS LISTELERI ============
+let denemelerTumu = [];
+let dersListesi = [];
+let aktifSablon = null;
+
+async function denemeDropdownDoldur(seciliId){
   const sel = document.getElementById('o_deneme');
   try{
-    const denemeler = await denemeleriListele();
-    const secenekler = denemeler.map(d=>{
-      const [y,m,gg] = (d.deneme_tarihi || '').split('-');
-      const tarihStr = (y && m && gg) ? `${gg}.${m}.${y}` : '';
-      return `<option value="${d.id}">${d.deneme_adi}${tarihStr ? ' — ' + tarihStr : ''}</option>`;
+    denemelerTumu = await denemeleriListele();
+    const secenekler = denemelerTumu.map(d=>{
+      const parts = (d.deneme_tarihi || '').split('-');
+      const y = parts[0], m = parts[1], gg = parts[2];
+      const tarihStr = (y && m && gg) ? (gg + '.' + m + '.' + y) : '';
+      return '<option value="' + d.id + '">' + d.deneme_adi + (tarihStr ? ' — ' + tarihStr : '') + '</option>';
     }).join('');
     sel.innerHTML = '<option value="">— Seç —</option>' + secenekler + '<option value="__yeni__">+ Yeni Deneme Ekle</option>';
+    if(seciliId) sel.value = seciliId;
   } catch(err){
-    console.error('denemeleriListele hatası:', err);
-    sel.innerHTML = '<option value="">Yüklenemedi</option><option value="__yeni__">+ Yeni Deneme Ekle</option>';
+    console.error('denemeleriListele hatasi:', err);
+    sel.innerHTML = '<option value="">Yuklenemedi</option><option value="__yeni__">+ Yeni Deneme Ekle</option>';
   }
 }
 
@@ -306,25 +384,24 @@ async function ogrenciDropdownDoldur(){
   try{
     const ogrenciler = await ogrencileriListele();
     sel.innerHTML = ogrenciler.length
-      ? '<option value="">— Seç —</option>' + ogrenciler.map(o=>`<option value="${o.id}">${o.ad_soyad}${o.ogrenci_no ? ' — No: ' + o.ogrenci_no : ''}</option>`).join('')
-      : '<option value="">Kayıtlı öğrenci yok</option>';
+      ? '<option value="">— Seç —</option>' + ogrenciler.map(o=>'<option value="' + o.id + '">' + o.ad_soyad + (o.ogrenci_no ? ' — No: ' + o.ogrenci_no : '') + '</option>').join('')
+      : '<option value="">Kayitli ogrenci yok</option>';
   } catch(err){
-    console.error('ogrencileriListele hatası:', err);
-    sel.innerHTML = '<option value="">Yüklenemedi</option>';
+    console.error('ogrencileriListele hatasi:', err);
+    sel.innerHTML = '<option value="">Yuklenemedi</option>';
   }
 }
 
-let dersListesi = []; // Supabase'ten: {id, ders_adi, soru_sayisi, sira}
 async function dersDropdownDoldur(){
   const sel = document.getElementById('o_ders');
   try{
     dersListesi = await derslerListele();
     sel.innerHTML = dersListesi.length
-      ? '<option value="">— Seç —</option>' + dersListesi.map(d=>`<option value="${d.id}">${d.ders_adi}</option>`).join('')
-      : '<option value="">Kayıtlı ders yok</option>';
+      ? '<option value="">— Seç —</option>' + dersListesi.map(d=>'<option value="' + d.id + '">' + d.ders_adi + '</option>').join('')
+      : '<option value="">Kayitli ders yok</option>';
   } catch(err){
-    console.error('derslerListele hatası:', err);
-    sel.innerHTML = '<option value="">Yüklenemedi</option>';
+    console.error('derslerListele hatasi:', err);
+    sel.innerHTML = '<option value="">Yuklenemedi</option>';
   }
 }
 
@@ -332,41 +409,103 @@ denemeDropdownDoldur();
 ogrenciDropdownDoldur();
 dersDropdownDoldur();
 
-// ============ DENEME SEÇİMİ ============
-document.getElementById('o_deneme').addEventListener('change', e=>{
+// ============ DENEME SECIMI -> SABLON KONTROLU ============
+document.getElementById('o_deneme').addEventListener('change', async function(e){
   const yeniMi = e.target.value === '__yeni__';
   document.getElementById('o_deneme_yeni').style.display = yeniMi ? 'block' : 'none';
+  document.getElementById('o_deneme_yeni_yayin').style.display = yeniMi ? 'block' : 'none';
   document.getElementById('o_deneme_yeni_tarih').style.display = yeniMi ? 'block' : 'none';
+
+  if(yeniMi || !e.target.value){
+    document.getElementById('sablonDurumBanner').style.display = 'none';
+    document.getElementById('sabloluModCard').style.display = 'none';
+    document.getElementById('manuelModAcLink').style.display = 'none';
+    document.getElementById('manuelModCard').style.display = 'none';
+    document.getElementById('fotoCard').style.display = 'none';
+    return;
+  }
+
+  const deneme = denemelerTumu.find(function(d){ return d.id === e.target.value; });
+  await sablonDurumunuGuncelle(deneme ? deneme.yayin : null);
+  cevapAnahtariniOtomatikGetir();
 });
 
-// ============ DERS SEÇİMİ — SORU SAYISINI OTOMATİK DOLDUR ============
-document.getElementById('o_ders').addEventListener('change', e=>{
-  const ders = dersListesi.find(d => d.id === e.target.value);
+async function sablonDurumunuGuncelle(yayinAdi){
+  const banner = document.getElementById('sablonDurumBanner');
+  aktifSablon = null;
+  if(!yayinAdi){
+    banner.style.display = 'block';
+    banner.className = 'durum-banner warn';
+    banner.innerHTML = 'Bu denemenin "Yayin" bilgisi girilmemis, bu yuzden otomatik sablon aranamiyor. Asagidan tek ders manuel modunu kullanabilirsin.';
+    document.getElementById('sabloluModCard').style.display = 'none';
+    document.getElementById('manuelModAcLink').style.display = 'none';
+    document.getElementById('manuelModCard').style.display = 'block';
+    document.getElementById('fotoCard').style.display = 'block';
+    return;
+  }
+
+  banner.style.display = 'block';
+  banner.className = 'durum-banner warn';
+  banner.textContent = 'Sablon kontrol ediliyor...';
+
+  try{
+    const sablon = await sablonGetir(yayinAdi);
+    if(sablon && sablon.sablon_json && sablon.sablon_json.bloklar && sablon.sablon_json.bloklar.length){
+      aktifSablon = sablon;
+      banner.className = 'durum-banner ok';
+      banner.innerHTML = '✅ "<strong>' + yayinAdi + '</strong>" yayini icin otomatik sablon bulundu (' + sablon.sablon_json.bloklar.length + ' ders). Asagida tek fotografla tum dersleri okutabilirsin.';
+      document.getElementById('sabloluModCard').style.display = 'block';
+      document.getElementById('manuelModAcLink').style.display = 'block';
+      document.getElementById('manuelModCard').style.display = 'none';
+      document.getElementById('fotoCard').style.display = 'none';
+    } else {
+      banner.className = 'durum-banner warn';
+      banner.innerHTML = '⚠️ "<strong>' + yayinAdi + '</strong>" yayini icin henuz sablon yok. <a href="sablon-olustur.html" target="_blank">Sablon Olustur sayfasindan ekle ↗</a> veya asagidan tek ders manuel modunu kullan.';
+      document.getElementById('sabloluModCard').style.display = 'none';
+      document.getElementById('manuelModAcLink').style.display = 'none';
+      document.getElementById('manuelModCard').style.display = 'block';
+      document.getElementById('fotoCard').style.display = 'block';
+    }
+  } catch(err){
+    console.error(err);
+    banner.className = 'durum-banner warn';
+    banner.textContent = 'Sablon kontrol edilemedi: ' + err.message;
+  }
+}
+
+document.getElementById('manuelModAcLink').addEventListener('click', function(){
+  const acikMi = document.getElementById('manuelModCard').style.display === 'block';
+  document.getElementById('manuelModCard').style.display = acikMi ? 'none' : 'block';
+  document.getElementById('fotoCard').style.display = acikMi ? 'none' : 'block';
+  document.getElementById('manuelModAcLink').textContent = acikMi
+    ? 'Diğer seçenek: Tek ders için elle kalibrasyon kullan ↓'
+    : 'Tek ders manuel modunu gizle ↑';
+});
+
+// ============ DERS SECIMI (manuel mod) ============
+document.getElementById('o_ders').addEventListener('change', function(e){
+  const ders = dersListesi.find(function(d){ return d.id === e.target.value; });
   if(ders && ders.soru_sayisi){
     document.getElementById('o_soru_sayisi').value = ders.soru_sayisi;
     document.getElementById('o_soru_sayisi').dispatchEvent(new Event('input'));
   }
   cevapAnahtariniOtomatikGetir();
 });
-document.getElementById('o_deneme').addEventListener('change', cevapAnahtariniOtomatikGetir);
 
-// ============ KAYITLI CEVAP ANAHTARINI OTOMATİK ÇEK ============
 async function cevapAnahtariniOtomatikGetir(){
   const denemeId = document.getElementById('o_deneme').value;
   const dersId = document.getElementById('o_ders').value;
   const anahtarInputEl = document.getElementById('o_cevap_anahtari');
-  if(!denemeId || denemeId === '__yeni__' || !dersId){
-    return;
-  }
-  anahtarInputEl.value = 'Yükleniyor...';
+  if(!denemeId || denemeId === '__yeni__' || !dersId) return;
+  anahtarInputEl.value = 'Yukleniyor...';
   try{
     const kayitli = await cevapAnahtariGetir(denemeId, dersId);
     if(kayitli.length){
-      anahtarInputEl.value = kayitli.map(k => k.dogru_cevap || '').join('');
+      anahtarInputEl.value = kayitli.map(function(k){ return k.dogru_cevap || ''; }).join('');
       anahtarDogrula();
     } else {
       anahtarInputEl.value = '';
-      anahtarHint.textContent = 'Bu ders için kayıtlı cevap anahtarı yok — Cevap Anahtarı sayfasından ekle veya buraya elle gir.';
+      anahtarHint.textContent = 'Bu ders icin kayitli cevap anahtari yok — Cevap Anahtari sayfasindan ekle veya buraya elle gir.';
       anahtarHint.className = 'hint warn';
     }
   } catch(err){
@@ -375,7 +514,7 @@ async function cevapAnahtariniOtomatikGetir(){
   }
 }
 
-// ============ CEVAP ANAHTARI DOĞRULAMA ============
+// ============ CEVAP ANAHTARI DOGRULAMA (manuel mod) ============
 const soruInput = document.getElementById('o_soru_sayisi');
 const anahtarInput = document.getElementById('o_cevap_anahtari');
 const anahtarHint = document.getElementById('o_anahtar_hint');
@@ -386,23 +525,25 @@ function anahtarDogrula(){
   const gecerliKarakterler = /^[ABCD]*$/.test(anahtar);
 
   if(!gecerliKarakterler){
-    anahtarHint.textContent = 'Sadece A, B, C, D karakterleri kullanılabilir.';
+    anahtarHint.textContent = 'Sadece A, B, C, D karakterleri kullanilabilir.';
     anahtarHint.className = 'hint warn';
     return false;
   }
   if(anahtar.length !== soruSayisi){
-    anahtarHint.textContent = `${anahtar.length}/${soruSayisi} karakter girildi.`;
+    anahtarHint.textContent = anahtar.length + '/' + soruSayisi + ' karakter girildi.';
     anahtarHint.className = 'hint warn';
     return false;
   }
-  anahtarHint.textContent = `${soruSayisi} soruluk cevap anahtarı tamam.`;
+  anahtarHint.textContent = soruSayisi + ' soruluk cevap anahtari tamam.';
   anahtarHint.className = 'hint ok';
   return true;
 }
 soruInput.addEventListener('input', anahtarDogrula);
 anahtarInput.addEventListener('input', anahtarDogrula);
 
-// ============ FOTOĞRAF YÜKLEME ============
+// ============================================================
+// MANUEL MOD - TEK DERS ELLE KALIBRASYON
+// ============================================================
 const dropzone = document.getElementById('dropzone');
 const fileInput = document.getElementById('fileInput');
 const canvas = document.getElementById('kalibrasyonCanvas');
@@ -412,30 +553,28 @@ const kalibStatus = document.getElementById('kalibStatus');
 const kalibBtnRow = document.getElementById('kalibBtnRow');
 const btnOku = document.getElementById('btnOku');
 
-dropzone.addEventListener('click', ()=> fileInput.click());
-fileInput.addEventListener('change', e=>{ if(e.target.files.length) yukle(e.target.files[0]); });
-dropzone.addEventListener('dragover', e=>{ e.preventDefault(); dropzone.style.borderColor='var(--blue)'; });
-dropzone.addEventListener('dragleave', ()=>{ dropzone.style.borderColor='var(--line)'; });
-dropzone.addEventListener('drop', e=>{
+dropzone.addEventListener('click', function(){ fileInput.click(); });
+fileInput.addEventListener('change', function(e){ if(e.target.files.length) yukle(e.target.files[0]); });
+dropzone.addEventListener('dragover', function(e){ e.preventDefault(); dropzone.style.borderColor='var(--blue)'; });
+dropzone.addEventListener('dragleave', function(){ dropzone.style.borderColor='var(--line)'; });
+dropzone.addEventListener('drop', function(e){
   e.preventDefault(); dropzone.style.borderColor='var(--line)';
   if(e.dataTransfer.files.length) yukle(e.dataTransfer.files[0]);
 });
 
-let offscreenCanvas, offscreenCtx;  // tam çözünürlük — piksel örneklemesi için
-let dispScale = 1;                  // görünen canvas / gerçek görüntü oranı
-let kalibNoktalari = [];            // tam çözünürlük koordinatlarında, 4 nokta
+let offscreenCanvas, offscreenCtx;
+let dispScale = 1;
+let kalibNoktalari = [];
 
 function yukle(file){
   const img = new Image();
-  img.onload = ()=>{
-    // tam çözünürlük offscreen canvas
+  img.onload = function(){
     offscreenCanvas = document.createElement('canvas');
     offscreenCanvas.width = img.naturalWidth;
     offscreenCanvas.height = img.naturalHeight;
     offscreenCtx = offscreenCanvas.getContext('2d');
     offscreenCtx.drawImage(img, 0, 0);
 
-    // görünen canvas — genişliği sabitle, oranı koru
     const dispW = Math.min(600, img.naturalWidth);
     const dispH = img.naturalHeight * (dispW / img.naturalWidth);
     dispScale = img.naturalWidth / dispW;
@@ -448,17 +587,35 @@ function yukle(file){
     kalibNoktalari = [];
     guncelleKalibNoktalari();
     dropzone.querySelector('strong').textContent = file.name;
+
+    kaliteKontroluCalistir(offscreenCanvas, document.getElementById('kaliteUyari'));
   };
   img.src = URL.createObjectURL(file);
 }
 
-canvas.addEventListener('click', e=>{
+async function kaliteKontroluCalistir(offscreen, uyariEl){
+  try{
+    await opencvYukle();
+    const sonuc = fotografKaliteKontrol(offscreen);
+    if(sonuc.uyarilar.length){
+      uyariEl.style.display = 'block';
+      uyariEl.className = 'hint warn';
+      uyariEl.innerHTML = '⚠️ ' + sonuc.uyarilar.join(' ');
+    } else {
+      uyariEl.style.display = 'none';
+    }
+  } catch(err){
+    console.error('kalite kontrolu hatasi:', err);
+  }
+}
+
+canvas.addEventListener('click', function(e){
   if(kalibNoktalari.length >= 4) return;
   const rect = canvas.getBoundingClientRect();
   const dispX = (e.clientX - rect.left) * (canvas.width / rect.width);
   const dispY = (e.clientY - rect.top) * (canvas.height / rect.height);
-  kalibNoktalari.push({ x: dispX * dispScale, y: dispY * dispScale }); // tam çözünürlük koordinatı
-  ciz();
+  kalibNoktalari.push({ x: dispX * dispScale, y: dispY * dispScale });
+  cizManuel();
   guncelleKalibNoktalari();
 });
 
@@ -468,22 +625,16 @@ function guncelleKalibNoktalari(){
   }
   btnOku.disabled = kalibNoktalari.length < 4;
   document.getElementById('kalibMetin').textContent = kalibNoktalari.length < 4
-    ? `Cevap kutucuk alanının 4 köşesine sırayla tıkla: Sol Üst → Sağ Üst → Sağ Alt → Sol Alt (${kalibNoktalari.length}/4)`
+    ? ('Cevap kutucuk alaninin 4 kosesine sirayla tikla: Sol Ust -> Sag Ust -> Sag Alt -> Sol Alt (' + kalibNoktalari.length + '/4)')
     : 'Kalibrasyon tamam. "Oku" butonuna basabilirsin.';
 }
 
-function ciz(){
-  // görüntüyü tekrar çiz + kalibrasyon noktalarını/çizgilerini işaretle
-  const img = new Image();
-  img.src = offscreenCanvas.toDataURL();
+function cizManuel(){
   ctx.clearRect(0,0,canvas.width, canvas.height);
   ctx.drawImage(offscreenCanvas, 0, 0, canvas.width, canvas.height);
-
-  ctx.fillStyle = '#2b5fc7';
-  ctx.strokeStyle = '#2b5fc7';
-  ctx.lineWidth = 2;
-  const dispPoints = kalibNoktalari.map(p => ({ x: p.x/dispScale, y: p.y/dispScale }));
-  dispPoints.forEach((p,i)=>{
+  ctx.fillStyle = '#2b5fc7'; ctx.strokeStyle = '#2b5fc7'; ctx.lineWidth = 2;
+  const dispPoints = kalibNoktalari.map(function(p){ return { x: p.x/dispScale, y: p.y/dispScale }; });
+  dispPoints.forEach(function(p,i){
     ctx.beginPath(); ctx.arc(p.x, p.y, 6, 0, Math.PI*2); ctx.fill();
     ctx.font = 'bold 11px sans-serif'; ctx.fillText(i+1, p.x+9, p.y-9);
   });
@@ -497,7 +648,7 @@ function ciz(){
   }
 }
 
-document.getElementById('btnKalibSifirla').addEventListener('click', ()=>{
+document.getElementById('btnKalibSifirla').addEventListener('click', function(){
   kalibNoktalari = [];
   ctx.clearRect(0,0,canvas.width, canvas.height);
   ctx.drawImage(offscreenCanvas, 0, 0, canvas.width, canvas.height);
@@ -505,78 +656,29 @@ document.getElementById('btnKalibSifirla').addEventListener('click', ()=>{
   document.getElementById('sonucCard').style.display = 'none';
 });
 
-// ============ OKUMA MOTORU (bilinear grid örnekleme) ============
-function bilinear(TL,TR,BR,BL,u,v){
-  const top = { x: TL.x + (TR.x-TL.x)*u, y: TL.y + (TR.y-TL.y)*u };
-  const bot = { x: BL.x + (BR.x-BL.x)*u, y: BL.y + (BR.y-BL.y)*u };
-  return { x: top.x + (bot.x-top.x)*v, y: top.y + (bot.y-top.y)*v };
-}
+let sonuclarState = [];
 
-function hucreKoyulugu(cx, cy, yariBoyut){
-  const x0 = Math.max(0, Math.round(cx - yariBoyut));
-  const y0 = Math.max(0, Math.round(cy - yariBoyut));
-  const w = Math.min(offscreenCanvas.width - x0, yariBoyut*2);
-  const h = Math.min(offscreenCanvas.height - y0, yariBoyut*2);
-  if(w <= 0 || h <= 0) return 255;
-  const data = offscreenCtx.getImageData(x0, y0, w, h).data;
-  let toplam = 0, adet = 0;
-  for(let i=0; i<data.length; i+=4){
-    toplam += 0.299*data[i] + 0.587*data[i+1] + 0.114*data[i+2];
-    adet++;
-  }
-  const ortalamaParlaklik = toplam / adet; // 0=siyah, 255=beyaz
-  return 255 - ortalamaParlaklik; // koyuluk: yüksek = koyu = muhtemelen işaretli
-}
-
-let sonuclarState = []; // { soru_no, okunan, guven, dogruMu, cakismaVar, boyaKoyluklari }
-
-document.getElementById('btnOku').addEventListener('click', ()=>{
-  if(!anahtarDogrula()){ alert('Önce geçerli bir cevap anahtarı gir.'); return; }
+btnOku.addEventListener('click', function(){
+  if(!anahtarDogrula()){ alert('Once gecerli bir cevap anahtari gir.'); return; }
   const soruSayisi = parseInt(soruInput.value);
   const anahtar = anahtarInput.value.trim().toUpperCase();
-  const secenekler = ['A','B','C','D'];
 
-  const [TL, TR, BR, BL] = kalibNoktalari;
-  const hucreGenislik = Math.abs(TR.x - TL.x) / (secenekler.length * soruSayisi); // kabaca boyut tahmini
-  const ornekYariBoyut = Math.max(4, hucreGenislik * 0.3);
+  const TL = kalibNoktalari[0], TR = kalibNoktalari[1], BR = kalibNoktalari[2], BL = kalibNoktalari[3];
+  const blok = {
+    koseler: { TL: TL, TR: TR, BR: BR, BL: BL },
+    soru_sayisi: soruSayisi,
+    secenek_sayisi: 4
+  };
+  // Ortak motor: bolgesel (kayan pencere) Otsu esiklemesi kullanir — sayfa
+  // boyunca golge/isik degisikliklerine karsi daha dayanikli.
+  const okuma = blokOku(offscreenCtx, offscreenCanvas.width, offscreenCanvas.height, blok);
 
-  sonuclarState = [];
-  const ESIK_KOYU = 55;      // bu değerden az koyu -> boş sayılır
-  const ESIK_FARK = 22;      // en koyu ile ikinci arasındaki fark bundan azsa -> çift işaretli
-
-  for(let r=0; r<soruSayisi; r++){
-    const koyluklar = [];
-    for(let c=0; c<secenekler.length; c++){
-      const u = (c + 0.5) / secenekler.length;
-      const v = (r + 0.5) / soruSayisi;
-      const p = bilinear(TL,TR,BR,BL,u,v);
-      koyluklar.push(hucreKoyulugu(p.x, p.y, ornekYariBoyut));
-    }
-    const maxVal = Math.max(...koyluklar);
-    const maxIdx = koyluklar.indexOf(maxVal);
-    const digerMax = Math.max(...koyluklar.filter((_,i)=>i!==maxIdx));
-
-    let okunan, guven, cakisma = false;
-    if(maxVal < ESIK_KOYU){
-      okunan = 'Boş'; guven = 0;
-    } else if((maxVal - digerMax) < ESIK_FARK){
-      okunan = secenekler[maxIdx]; cakisma = true;
-      guven = Math.round(((maxVal - digerMax) / ESIK_FARK) * 40); // düşük güven
-    } else {
-      okunan = secenekler[maxIdx];
-      guven = Math.min(100, Math.round(40 + ((maxVal - digerMax) / 150) * 60));
-    }
-
-    sonuclarState.push({
-      soru_no: r+1,
-      okunan, guven, cakisma,
-      dogruCevap: anahtar[r]
-    });
-  }
+  sonuclarState = okuma.map(function(s){
+    return { soru_no: s.soru_no, okunan: s.okunan, guven: s.guven, cakisma: s.cakisma, dogruCevap: anahtar[s.soru_no-1] };
+  });
 
   sonucTabloCiz();
   document.getElementById('sonucCard').style.display = 'block';
-  document.getElementById('sonucCard').scrollIntoView({behavior:'smooth', block:'start'});
 });
 
 function sonucTabloCiz(){
@@ -584,31 +686,30 @@ function sonucTabloCiz(){
   tbody.innerHTML = '';
   let uyariSayisi = 0;
 
-  sonuclarState.forEach((s, i)=>{
-    const uyariVar = s.cakisma || (s.guven < 45 && s.okunan !== 'Boş');
+  sonuclarState.forEach(function(s, i){
+    const uyariVar = s.cakisma || (s.guven < 45 && s.okunan !== 'Bos');
     if(uyariVar) uyariSayisi++;
 
     const tr = document.createElement('tr');
     tr.className = uyariVar ? 'uyari' : '';
     const guvenSinifi = s.guven < 45 ? 'dusuk' : '';
 
-    const secenekler = ['A','B','C','D','Boş'];
-    const optionsHtml = secenekler.map(op => `<option value="${op}" ${op===s.okunan?'selected':''}>${op}</option>`).join('');
+    const secenekler2 = ['A','B','C','D','Bos'];
+    const optionsHtml = secenekler2.map(function(op){ return '<option value="'+op+'" '+(op===s.okunan?'selected':'')+'>'+op+'</option>'; }).join('');
 
-    tr.innerHTML = `
-      <td>${s.soru_no}${s.cakisma ? ' <span class="badge-uyari">çift</span>' : ''}</td>
-      <td><strong>${s.okunan}</strong></td>
-      <td><span class="guven-bar"><span class="guven-bar-fill ${guvenSinifi}" style="width:${s.guven}%"></span></span>${s.guven}%</td>
-      <td><select data-i="${i}">${optionsHtml}</select></td>
-    `;
+    tr.innerHTML =
+      '<td>' + s.soru_no + (s.cakisma ? ' <span class="badge-uyari">cift</span>' : '') + '</td>' +
+      '<td><strong>' + s.okunan + '</strong></td>' +
+      '<td><span class="guven-bar"><span class="guven-bar-fill ' + guvenSinifi + '" style="width:' + s.guven + '%"></span></span>' + s.guven + '%</td>' +
+      '<td><select data-i="' + i + '">' + optionsHtml + '</select></td>';
     tbody.appendChild(tr);
   });
 
-  document.querySelectorAll('#sonucTbody select').forEach(sel=>{
-    sel.addEventListener('change', e=>{
+  document.querySelectorAll('#sonucTbody select').forEach(function(sel){
+    sel.addEventListener('change', function(e){
       const i = parseInt(e.target.dataset.i);
       sonuclarState[i].okunan = e.target.value;
-      sonuclarState[i].guven = 100; // manuel düzeltme = tam güven
+      sonuclarState[i].guven = 100;
       sonuclarState[i].cakisma = false;
       sonucTabloCiz();
       ozetHesapla();
@@ -618,18 +719,17 @@ function sonucTabloCiz(){
   const badge = document.getElementById('uyariSayisi');
   if(uyariSayisi > 0){
     badge.style.display = 'inline-block';
-    badge.textContent = `${uyariSayisi} satır kontrol gerektiriyor`;
+    badge.textContent = uyariSayisi + ' satir kontrol gerektiriyor';
   } else {
     badge.style.display = 'none';
   }
-
   ozetHesapla();
 }
 
 function ozetHesapla(){
   let d=0, y=0, b=0;
-  sonuclarState.forEach(s=>{
-    if(s.okunan === 'Boş') b++;
+  sonuclarState.forEach(function(s){
+    if(s.okunan === 'Bos') b++;
     else if(s.okunan === s.dogruCevap) d++;
     else y++;
   });
@@ -638,55 +738,60 @@ function ozetHesapla(){
   document.getElementById('ozetY').textContent = y;
   document.getElementById('ozetB').textContent = b;
   document.getElementById('ozetNet').textContent = net.toFixed(2).replace('.',',');
+
+  const guvenliSorular = sonuclarState.filter(function(s){ return s.okunan !== 'Bos'; });
+  const ortGuven = guvenliSorular.length
+    ? Math.round(guvenliSorular.reduce(function(acc,s){ return acc+s.guven; }, 0) / guvenliSorular.length)
+    : null;
+  const guvenEl = document.getElementById('ozetGuven');
+  if(ortGuven === null){
+    guvenEl.textContent = '—';
+  } else {
+    guvenEl.textContent = ortGuven + '%';
+    guvenEl.style.color = ortGuven < 60 ? 'var(--warn)' : (ortGuven < 80 ? 'var(--navy-deep)' : 'var(--success)');
+  }
 }
 
-// ============ SONUCU KAYDET (gerçek Supabase kaydı) ============
-document.getElementById('btnKaydet').addEventListener('click', async ()=>{
+document.getElementById('btnKaydet').addEventListener('click', async function(){
   const btn = document.getElementById('btnKaydet');
   const ogrenciId = document.getElementById('o_ogrenci').value;
   const denemeSel = document.getElementById('o_deneme').value;
   const dersId = document.getElementById('o_ders').value;
 
-  if(!ogrenciId){ alert('Önce öğrenci seç.'); return; }
-  if(!denemeSel){ alert('Önce deneme seç.'); return; }
-  if(!dersId){ alert('Önce ders seç.'); return; }
-  if(!sonuclarState.length){ alert('Önce optik formu okut.'); return; }
+  if(!ogrenciId){ alert('Once ogrenci sec.'); return; }
+  if(!denemeSel){ alert('Once deneme sec.'); return; }
+  if(!dersId){ alert('Once ders sec.'); return; }
+  if(!sonuclarState.length){ alert('Once optik formu okut.'); return; }
 
   const eskiMetin = btn.textContent;
   btn.disabled = true; btn.textContent = 'Kaydediliyor...';
 
   try{
     let gercekDenemeId = denemeSel;
-
     if(denemeSel === '__yeni__'){
       const yeniAd = document.getElementById('o_deneme_yeni').value.trim();
+      const yeniYayin = document.getElementById('o_deneme_yeni_yayin').value.trim();
       const yeniTarih = document.getElementById('o_deneme_yeni_tarih').value;
-      if(!yeniAd || !yeniTarih){ alert('Yeni deneme için ad ve tarih gir.'); btn.disabled = false; btn.textContent = eskiMetin; return; }
-      const yeniDeneme = await denemeOlustur(yeniAd, null, yeniTarih, null);
-      if(!yeniDeneme) throw new Error('Yeni deneme oluşturulamadı.');
+      if(!yeniAd || !yeniTarih){ alert('Yeni deneme icin ad ve tarih gir.'); btn.disabled = false; btn.textContent = eskiMetin; return; }
+      const yeniDeneme = await denemeOlustur(yeniAd, yeniYayin || null, yeniTarih, null);
+      if(!yeniDeneme) throw new Error('Yeni deneme olusturulamadi.');
       gercekDenemeId = yeniDeneme.id;
-      await denemeDropdownDoldur();
-      document.getElementById('o_deneme').value = gercekDenemeId;
-      document.getElementById('o_deneme_yeni').style.display = 'none';
-      document.getElementById('o_deneme_yeni_tarih').style.display = 'none';
+      await denemeDropdownDoldur(gercekDenemeId);
     }
 
     let d=0, y=0, b=0;
-    sonuclarState.forEach(s=>{
-      if(s.okunan === 'Boş') b++;
+    sonuclarState.forEach(function(s){
+      if(s.okunan === 'Bos') b++;
       else if(s.okunan === s.dogruCevap) d++;
       else y++;
     });
 
-    const cevaplarArray = sonuclarState.map(s => ({
-      ders_id: dersId,
-      soru_no: s.soru_no,
-      verilen_cevap: s.okunan === 'Boş' ? null : s.okunan
-    }));
+    const cevaplarArray = sonuclarState.map(function(s){
+      return { ders_id: dersId, soru_no: s.soru_no, verilen_cevap: s.okunan === 'Bos' ? null : s.okunan };
+    });
 
     await fotografSonucKaydet(ogrenciId, gercekDenemeId, dersId, d, y, b, cevaplarArray);
-
-    alert('Sonuç kaydedildi. Öğrencinin bu denemedeki toplam neti güncellendi.');
+    alert('Sonuc kaydedildi. Ogrencinin bu denemedeki toplam neti guncellendi.');
   } catch(err){
     console.error(err);
     alert('Kaydedilemedi: ' + err.message);
@@ -695,18 +800,17 @@ document.getElementById('btnKaydet').addEventListener('click', async ()=>{
   }
 });
 
-// ============ PDF OLUŞTUR (Supabase'den bağımsız çalışır) ============
-document.getElementById('btnPDF').addEventListener('click', async ()=>{
+document.getElementById('btnPDF').addEventListener('click', async function(){
   const btn = document.getElementById('btnPDF');
   const ogrenciSel = document.getElementById('o_ogrenci');
   const denemeSel = document.getElementById('o_deneme');
   const dersSel = document.getElementById('o_ders');
 
-  const ogrenciAdi = ogrenciSel.selectedOptions[0]?.textContent || '—';
+  const ogrenciAdi = (ogrenciSel.selectedOptions[0] && ogrenciSel.selectedOptions[0].textContent) || '—';
   const denemeAdi = denemeSel.value === '__yeni__'
     ? (document.getElementById('o_deneme_yeni').value.trim() || '—')
-    : (denemeSel.selectedOptions[0]?.textContent || '—');
-  const dersAdi = dersSel.selectedOptions[0]?.textContent || '—';
+    : ((denemeSel.selectedOptions[0] && denemeSel.selectedOptions[0].textContent) || '—');
+  const dersAdi = (dersSel.selectedOptions[0] && dersSel.selectedOptions[0].textContent) || '—';
 
   document.getElementById('pdf_ogrenci_adi').textContent = ogrenciAdi;
   document.getElementById('pdf_deneme_adi').textContent = denemeAdi;
@@ -716,40 +820,404 @@ document.getElementById('btnPDF').addEventListener('click', async ()=>{
   document.getElementById('pdf_y').textContent = document.getElementById('ozetY').textContent;
   document.getElementById('pdf_b').textContent = document.getElementById('ozetB').textContent;
   document.getElementById('pdf_net').textContent = document.getElementById('ozetNet').textContent;
+  document.getElementById('pdf_tablo_baslik').textContent = 'Soru Bazli Sonuc';
 
   const tbody = document.getElementById('pdf_soru_tbody');
   tbody.innerHTML = '';
-  sonuclarState.forEach(s=>{
+  sonuclarState.forEach(function(s){
     const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td style="padding:7px 6px 7px 20px; font-size:12.5px; border-bottom:1px solid #eef3fb;">${s.soru_no}</td>
-      <td style="padding:7px 6px; font-size:12.5px; text-align:center; font-weight:700; color:${s.okunan===s.dogruCevap ? '#0f9d63' : (s.okunan==='Boş' ? '#65748b' : '#e0473a')}; border-bottom:1px solid #eef3fb;">${s.okunan}</td>
-      <td style="padding:7px 6px; font-size:12.5px; text-align:center; border-bottom:1px solid #eef3fb;">${s.dogruCevap}</td>
-    `;
+    const renk = s.okunan===s.dogruCevap ? '#0f9d63' : (s.okunan==='Bos' ? '#65748b' : '#e0473a');
+    tr.innerHTML =
+      '<td style="padding:7px 6px 7px 20px; font-size:12.5px; border-bottom:1px solid #eef3fb;">' + s.soru_no + '</td>' +
+      '<td style="padding:7px 6px; font-size:12.5px; text-align:center; font-weight:700; color:' + renk + '; border-bottom:1px solid #eef3fb;">' + s.okunan + '</td>' +
+      '<td style="padding:7px 6px; font-size:12.5px; text-align:center; border-bottom:1px solid #eef3fb;">' + s.dogruCevap + '</td>';
     tbody.appendChild(tr);
   });
 
-  const eskiMetin = btn.textContent;
-  btn.disabled = true; btn.textContent = 'Hazırlanıyor...';
+  await pdfIndir('optik-sonuc-' + ogrenciAdi.split(' — ')[0].replace(/\s+/g,'-') + '.pdf', btn);
+});
 
+async function pdfIndir(dosyaAdi, btn){
+  const eskiMetin = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Hazirlaniyor...';
   try{
     const rapor = document.getElementById('pdfRapor');
-    const canvas = await html2canvas(rapor, {scale:2, backgroundColor:'#ffffff'});
-    const imgData = canvas.toDataURL('image/png');
-    const { jsPDF } = window.jspdf;
+    const canvasPdf = await html2canvas(rapor, {scale:2, backgroundColor:'#ffffff'});
+    const imgData = canvasPdf.toDataURL('image/png');
+    const jsPDF = window.jspdf.jsPDF;
     const pdf = new jsPDF('p','mm','a4');
     const pageWidth = 210;
     const imgWidth = pageWidth - 20;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    const imgHeight = (canvasPdf.height * imgWidth) / canvasPdf.width;
     pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
-    const dosyaAdi = `optik-sonuc-${ogrenciAdi.split(' — ')[0].replace(/\s+/g,'-')}.pdf`;
     pdf.save(dosyaAdi);
   } catch(err){
     console.error(err);
-    alert('PDF oluşturulamadı: ' + err.message);
+    alert('PDF olusturulamadi: ' + err.message);
   } finally {
     btn.disabled = false; btn.textContent = eskiMetin;
   }
+}
+
+// ============================================================
+// SABLONLU MOD - COKLU DERS OTOMATIK OKUMA
+// ============================================================
+const dropzoneCoklu = document.getElementById('dropzoneCoklu');
+const fileInputCoklu = document.getElementById('fileInputCoklu');
+const canvasCoklu = document.getElementById('canvasCoklu');
+const ctxCoklu = canvasCoklu.getContext('2d');
+const canvasWrapCoklu = document.getElementById('canvasWrapCoklu');
+
+dropzoneCoklu.addEventListener('click', function(){ fileInputCoklu.click(); });
+fileInputCoklu.addEventListener('change', function(e){ if(e.target.files.length) cokluFotografYukle(e.target.files[0]); });
+dropzoneCoklu.addEventListener('dragover', function(e){ e.preventDefault(); dropzoneCoklu.style.borderColor='var(--blue)'; });
+dropzoneCoklu.addEventListener('dragleave', function(){ dropzoneCoklu.style.borderColor='var(--line)'; });
+dropzoneCoklu.addEventListener('drop', function(e){
+  e.preventDefault(); dropzoneCoklu.style.borderColor='var(--line)';
+  if(e.dataTransfer.files.length) cokluFotografYukle(e.dataTransfer.files[0]);
+});
+
+let cokluOffscreen, cokluOffscreenCtx, cokluDispScale = 1;
+let cokluDisKoseler = [];
+let cokluElleAktif = false;
+
+function cokluFotografYukle(file){
+  const img = new Image();
+  img.onload = function(){
+    cokluOffscreen = document.createElement('canvas');
+    cokluOffscreen.width = img.naturalWidth;
+    cokluOffscreen.height = img.naturalHeight;
+    cokluOffscreenCtx = cokluOffscreen.getContext('2d');
+    cokluOffscreenCtx.drawImage(img, 0, 0);
+
+    const dispW = Math.min(600, img.naturalWidth);
+    const dispH = img.naturalHeight * (dispW / img.naturalWidth);
+    cokluDispScale = img.naturalWidth / dispW;
+    canvasCoklu.width = dispW; canvasCoklu.height = dispH;
+    ctxCoklu.drawImage(img, 0, 0, dispW, dispH);
+
+    canvasWrapCoklu.style.display = 'block';
+    document.getElementById('cokluOtomatikBtnRow').style.display = 'flex';
+    document.getElementById('cokluKalibStatus').style.display = 'none';
+    document.getElementById('cokluOkuBtnRow').style.display = 'none';
+    document.getElementById('cokluSonucAlani').style.display = 'none';
+    document.getElementById('cokluHint').textContent = '';
+    cokluDisKoseler = [];
+    cokluElleAktif = false;
+    dropzoneCoklu.querySelector('strong').textContent = file.name;
+
+    kaliteKontroluCalistir(cokluOffscreen, document.getElementById('cokluKaliteUyari'));
+  };
+  img.src = URL.createObjectURL(file);
+}
+
+document.getElementById('btnCokluOtomatikAlgila').addEventListener('click', async function(){
+  const btn = document.getElementById('btnCokluOtomatikAlgila');
+  const hint = document.getElementById('cokluHint');
+  btn.disabled = true; btn.textContent = 'Yukleniyor (OpenCV)...';
+  try{
+    await opencvYukle();
+    btn.textContent = 'Algilaniyor...';
+    const koseler = otomatikDortKoseAlgila(cokluOffscreen);
+    if(!koseler){
+      hint.textContent = 'Otomatik algilama basarisiz — "Elle Isaretle" ile devam et.';
+      hint.className = 'hint warn';
+      return;
+    }
+    cokluDisKoseler = [koseler.TL, koseler.TR, koseler.BR, koseler.BL];
+    cokluCiz();
+    cokluDotGuncelle();
+    hint.textContent = 'Otomatik algilandi. Yanlissa "Elle Isaretle" ile duzelt.';
+    hint.className = 'hint ok';
+    document.getElementById('cokluOkuBtnRow').style.display = 'flex';
+    document.getElementById('btnCokluOku').disabled = false;
+  } catch(err){
+    console.error(err);
+    hint.textContent = 'Hata: ' + err.message + ' — "Elle Isaretle" ile devam edebilirsin.';
+    hint.className = 'hint danger';
+  } finally {
+    btn.disabled = false; btn.textContent = '🪄 Otomatik Algıla';
+  }
+});
+
+document.getElementById('btnCokluElleKalibre').addEventListener('click', function(){
+  cokluElleAktif = true;
+  cokluDisKoseler = [];
+  ctxCoklu.clearRect(0,0,canvasCoklu.width, canvasCoklu.height);
+  ctxCoklu.drawImage(cokluOffscreen, 0, 0, canvasCoklu.width, canvasCoklu.height);
+  document.getElementById('cokluKalibStatus').style.display = 'flex';
+  document.getElementById('cokluOkuBtnRow').style.display = 'flex';
+  cokluDotGuncelle();
+});
+
+canvasCoklu.addEventListener('click', function(e){
+  if(!cokluElleAktif || cokluDisKoseler.length >= 4) return;
+  const rect = canvasCoklu.getBoundingClientRect();
+  const dispX = (e.clientX - rect.left) * (canvasCoklu.width / rect.width);
+  const dispY = (e.clientY - rect.top) * (canvasCoklu.height / rect.height);
+  cokluDisKoseler.push({ x: dispX * cokluDispScale, y: dispY * cokluDispScale });
+  cokluCiz();
+  cokluDotGuncelle();
+});
+
+function cokluCiz(){
+  ctxCoklu.clearRect(0,0,canvasCoklu.width, canvasCoklu.height);
+  ctxCoklu.drawImage(cokluOffscreen, 0, 0, canvasCoklu.width, canvasCoklu.height);
+  ctxCoklu.fillStyle = '#2b5fc7'; ctxCoklu.strokeStyle = '#2b5fc7'; ctxCoklu.lineWidth = 2;
+  const dispPts = cokluDisKoseler.map(function(p){ return { x: p.x/cokluDispScale, y: p.y/cokluDispScale }; });
+  dispPts.forEach(function(p,i){
+    ctxCoklu.beginPath(); ctxCoklu.arc(p.x, p.y, 6, 0, Math.PI*2); ctxCoklu.fill();
+    ctxCoklu.font = 'bold 11px sans-serif'; ctxCoklu.fillText(i+1, p.x+9, p.y-9);
+  });
+  if(dispPts.length === 4){
+    ctxCoklu.beginPath();
+    ctxCoklu.moveTo(dispPts[0].x, dispPts[0].y);
+    ctxCoklu.lineTo(dispPts[1].x, dispPts[1].y);
+    ctxCoklu.lineTo(dispPts[2].x, dispPts[2].y);
+    ctxCoklu.lineTo(dispPts[3].x, dispPts[3].y);
+    ctxCoklu.closePath(); ctxCoklu.stroke();
+  }
+}
+
+function cokluDotGuncelle(){
+  for(let i=0;i<4;i++) document.getElementById('cdot'+i).classList.toggle('done', i < cokluDisKoseler.length);
+  document.getElementById('btnCokluOku').disabled = cokluDisKoseler.length < 4;
+  const metin = document.getElementById('cokluKalibMetin');
+  if(metin) metin.textContent = cokluDisKoseler.length < 4
+    ? ('Formun 4 dis kosesine sirayla tikla: Sol Ust -> Sag Ust -> Sag Alt -> Sol Alt (' + cokluDisKoseler.length + '/4)')
+    : 'Tamam. "Oku" butonuna basabilirsin.';
+}
+
+document.getElementById('btnCokluSifirla').addEventListener('click', function(){
+  cokluDisKoseler = [];
+  ctxCoklu.clearRect(0,0,canvasCoklu.width, canvasCoklu.height);
+  ctxCoklu.drawImage(cokluOffscreen, 0, 0, canvasCoklu.width, canvasCoklu.height);
+  cokluDotGuncelle();
+  document.getElementById('cokluSonucAlani').style.display = 'none';
+});
+
+let dersSonuclariState = {};
+
+document.getElementById('btnCokluOku').addEventListener('click', async function(){
+  const btn = document.getElementById('btnCokluOku');
+  const hint = document.getElementById('cokluHint');
+  if(!aktifSablon){ alert('Sablon bulunamadi.'); return; }
+  const denemeId = document.getElementById('o_deneme').value;
+
+  btn.disabled = true; btn.textContent = 'Perspektif duzeltiliyor...';
+  try{
+    await opencvYukle();
+    const koseler = {
+      TL: cokluDisKoseler[0], TR: cokluDisKoseler[1],
+      BR: cokluDisKoseler[2], BL: cokluDisKoseler[3]
+    };
+    const KANONIK_W = aktifSablon.sablon_json.kagit_en || 1000;
+    const KANONIK_H = aktifSablon.sablon_json.kagit_boy || 1414;
+    const kanonikCanvas = perspektifDuzelt(cokluOffscreen, koseler, KANONIK_W, KANONIK_H);
+    const kanonikCtx = kanonikCanvas.getContext('2d');
+
+    btn.textContent = 'Okunuyor...';
+    const bloklar = aktifSablon.sablon_json.bloklar;
+
+    dersSonuclariState = {};
+    for(const blok of bloklar){
+      const okuma = blokOku(kanonikCtx, KANONIK_W, KANONIK_H, blok);
+      let anahtar = [];
+      let anahtarYok = false;
+      try{
+        anahtar = await cevapAnahtariGetir(denemeId, blok.ders_id);
+      } catch(err){ console.error(err); }
+      if(!anahtar.length) anahtarYok = true;
+
+      const anahtarMap = {};
+      anahtar.forEach(function(a){ anahtarMap[a.soru_no] = a.dogru_cevap; });
+
+      const sonuclar = okuma.map(function(s){
+        return Object.assign({}, s, { dogruCevap: anahtarMap[s.soru_no] || null });
+      });
+
+      let d=0,y=0,b=0;
+      sonuclar.forEach(function(s){
+        if(s.okunan === 'Bos') b++;
+        else if(anahtarYok) { /* hesaplanamaz */ }
+        else if(s.okunan === s.dogruCevap) d++;
+        else y++;
+      });
+      const net = anahtarYok ? null : (d - y/3);
+
+      dersSonuclariState[blok.ders_id] = {
+        ders_adi: blok.ders_adi, sonuclar: sonuclar, d: d, y: y, b: b, net: net, anahtarYok: anahtarYok
+      };
+    }
+
+    dersSonucListesiCiz();
+    document.getElementById('cokluSonucAlani').style.display = 'block';
+    hint.textContent = '';
+  } catch(err){
+    console.error(err);
+    hint.textContent = 'Okuma sirasinda hata: ' + err.message;
+    hint.className = 'hint danger';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Oku (Tüm Dersler)';
+  }
+});
+
+function dersSonucListesiCiz(){
+  const el = document.getElementById('dersSonucListesi');
+  el.innerHTML = '';
+  let toplamNet = 0;
+
+  Object.entries(dersSonuclariState).forEach(function(entry){
+    const dersId = entry[0], ds = entry[1];
+    if(ds.net !== null){ toplamNet += ds.net; }
+
+    const kart = document.createElement('div');
+    kart.className = 'ders-sonuc-kart' + (ds.anahtarYok ? ' uyarili' : '');
+    const guvenliSorular = ds.sonuclar.filter(function(s){ return s.okunan !== 'Bos'; });
+    const ortGuven = guvenliSorular.length
+      ? Math.round(guvenliSorular.reduce(function(acc,s){ return acc+s.guven; },0) / guvenliSorular.length)
+      : null;
+    const guvenRengi = ortGuven === null ? 'var(--muted)' : (ortGuven < 60 ? 'var(--warn)' : (ortGuven < 80 ? 'var(--navy-deep)' : 'var(--success)'));
+    const guvenHtml = ortGuven !== null ? ('<span style="color:'+guvenRengi+';">Güven: ' + ortGuven + '%</span>') : '';
+    const miniOzet = ds.anahtarYok
+      ? ('<span>' + ds.sonuclar.length + ' soru okundu</span>' + guvenHtml)
+      : ('<span>D:' + ds.d + '</span><span>Y:' + ds.y + '</span><span>B:' + ds.b + '</span>' + guvenHtml);
+    kart.innerHTML =
+      '<div class="baslik" data-id="' + dersId + '">' +
+        '<div>' +
+          '<div class="ad">' + ds.ders_adi + (ds.anahtarYok ? ' <span class="badge-uyari">cevap anahtari yok</span>' : '') + '</div>' +
+          '<div class="mini-ozet">' + miniOzet + '</div>' +
+        '</div>' +
+        '<div class="net">' + (ds.net !== null ? ds.net.toFixed(2).replace('.',',') : '—') + '</div>' +
+      '</div>' +
+      '<div class="detay" id="detay-' + dersId + '">' +
+        '<div style="overflow-x:auto; margin-top:8px;">' +
+          '<table class="sonuc-tablo">' +
+            '<thead><tr><th>Soru</th><th>Okunan</th><th>Guven</th><th>Duzelt</th></tr></thead>' +
+            '<tbody id="tbody-' + dersId + '"></tbody>' +
+          '</table>' +
+        '</div>' +
+      '</div>';
+    el.appendChild(kart);
+
+    kart.querySelector('.baslik').addEventListener('click', function(){
+      const detay = document.getElementById('detay-'+dersId);
+      const acikMi = detay.classList.contains('acik');
+      if(!acikMi) dersDetayTabloCiz(dersId);
+      detay.classList.toggle('acik', !acikMi);
+    });
+  });
+
+  document.getElementById('cokluToplamNet').textContent = toplamNet.toFixed(2).replace('.',',');
+}
+
+function dersDetayTabloCiz(dersId){
+  const ds = dersSonuclariState[dersId];
+  const tbody = document.getElementById('tbody-'+dersId);
+  tbody.innerHTML = '';
+  const secenekler2 = ['A','B','C','D','E','Bos'];
+
+  ds.sonuclar.forEach(function(s,i){
+    const uyariVar = s.cakisma || (s.guven < 45 && s.okunan !== 'Bos');
+    const tr = document.createElement('tr');
+    tr.className = uyariVar ? 'uyari' : '';
+    const guvenSinifi = s.guven < 45 ? 'dusuk' : '';
+    const optionsHtml = secenekler2.map(function(op){ return '<option value="'+op+'" '+(op===s.okunan?'selected':'')+'>'+op+'</option>'; }).join('');
+    tr.innerHTML =
+      '<td>' + s.soru_no + (s.cakisma ? ' <span class="badge-uyari">cift</span>' : '') + '</td>' +
+      '<td><strong>' + s.okunan + '</strong></td>' +
+      '<td><span class="guven-bar"><span class="guven-bar-fill ' + guvenSinifi + '" style="width:' + s.guven + '%"></span></span>' + s.guven + '%</td>' +
+      '<td><select data-i="' + i + '" data-ders="' + dersId + '">' + optionsHtml + '</select></td>';
+    tbody.appendChild(tr);
+  });
+
+  tbody.querySelectorAll('select').forEach(function(sel){
+    sel.addEventListener('change', function(e){
+      const i = parseInt(e.target.dataset.i);
+      const dId = e.target.dataset.ders;
+      const ds2 = dersSonuclariState[dId];
+      ds2.sonuclar[i].okunan = e.target.value;
+      ds2.sonuclar[i].guven = 100;
+      ds2.sonuclar[i].cakisma = false;
+      let d=0,y=0,b=0;
+      ds2.sonuclar.forEach(function(s){
+        if(s.okunan === 'Bos') b++;
+        else if(ds2.anahtarYok) { /* hesaplanamaz */ }
+        else if(s.okunan === s.dogruCevap) d++;
+        else y++;
+      });
+      ds2.d=d; ds2.y=y; ds2.b=b;
+      ds2.net = ds2.anahtarYok ? null : (d - y/3);
+      dersSonucListesiCiz();
+      document.getElementById('detay-'+dId).classList.add('acik');
+      dersDetayTabloCiz(dId);
+    });
+  });
+}
+
+document.getElementById('btnCokluKaydet').addEventListener('click', async function(){
+  const btn = document.getElementById('btnCokluKaydet');
+  const ogrenciId = document.getElementById('o_ogrenci').value;
+  const denemeId = document.getElementById('o_deneme').value;
+  if(!ogrenciId){ alert('Once ogrenci sec.'); return; }
+  if(!denemeId || denemeId === '__yeni__'){ alert('Once deneme sec.'); return; }
+  if(!Object.keys(dersSonuclariState).length){ alert('Once formu okut.'); return; }
+
+  const eskiMetin = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Kaydediliyor...';
+  try{
+    for(const entry of Object.entries(dersSonuclariState)){
+      const dersId = entry[0], ds = entry[1];
+      if(ds.anahtarYok) continue;
+      const cevaplarArray = ds.sonuclar.map(function(s){
+        return { ders_id: dersId, soru_no: s.soru_no, verilen_cevap: s.okunan === 'Bos' ? null : s.okunan };
+      });
+      await fotografSonucKaydet(ogrenciId, denemeId, dersId, ds.d, ds.y, ds.b, cevaplarArray);
+    }
+    alert('Tum dersler kaydedildi. (Cevap anahtari olmayan dersler atlandi.)');
+  } catch(err){
+    console.error(err);
+    alert('Kaydedilemedi: ' + err.message);
+  } finally {
+    btn.disabled = false; btn.textContent = eskiMetin;
+  }
+});
+
+document.getElementById('btnCokluPDF').addEventListener('click', async function(){
+  const btn = document.getElementById('btnCokluPDF');
+  const ogrenciSel = document.getElementById('o_ogrenci');
+  const denemeSel = document.getElementById('o_deneme');
+  const ogrenciAdi = (ogrenciSel.selectedOptions[0] && ogrenciSel.selectedOptions[0].textContent) || '—';
+  const denemeAdi = (denemeSel.selectedOptions[0] && denemeSel.selectedOptions[0].textContent) || '—';
+
+  document.getElementById('pdf_ogrenci_adi').textContent = ogrenciAdi;
+  document.getElementById('pdf_deneme_adi').textContent = denemeAdi;
+  document.getElementById('pdf_ders_adi').textContent = 'Tum Dersler';
+  document.getElementById('pdf_tarih').textContent = new Date().toLocaleDateString('tr-TR');
+
+  let toplamNet=0, toplamD=0, toplamY=0, toplamB=0;
+  Object.values(dersSonuclariState).forEach(function(ds){
+    if(ds.net !== null) toplamNet += ds.net;
+    toplamD += ds.d; toplamY += ds.y; toplamB += ds.b;
+  });
+  document.getElementById('pdf_d').textContent = toplamD;
+  document.getElementById('pdf_y').textContent = toplamY;
+  document.getElementById('pdf_b').textContent = toplamB;
+  document.getElementById('pdf_net').textContent = toplamNet.toFixed(2).replace('.',',');
+  document.getElementById('pdf_tablo_baslik').textContent = 'Ders Bazli Sonuc';
+
+  const tbody = document.getElementById('pdf_soru_tbody');
+  tbody.innerHTML = '';
+  Object.values(dersSonuclariState).forEach(function(ds){
+    const tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td style="padding:7px 6px 7px 20px; font-size:12.5px; border-bottom:1px solid #eef3fb;">' + ds.ders_adi + '</td>' +
+      '<td style="padding:7px 6px; font-size:12.5px; text-align:center; border-bottom:1px solid #eef3fb;">D:' + ds.d + ' Y:' + ds.y + ' B:' + ds.b + '</td>' +
+      '<td style="padding:7px 6px; font-size:12.5px; text-align:center; font-weight:700; border-bottom:1px solid #eef3fb;">' + (ds.net !== null ? ds.net.toFixed(2).replace('.',',') : '—') + '</td>';
+    tbody.appendChild(tr);
+  });
+
+  await pdfIndir('optik-sonuc-' + ogrenciAdi.split(' — ')[0].replace(/\s+/g,'-') + '.pdf', btn);
 });
 </script>
 
