@@ -6,6 +6,8 @@
 <title>Öğretmen Paneli</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-baglanti.js"></script>
 <style>
   :root{
     --navy-deep:#0a1a37; --navy:#0f2657; --blue:#2b5fc7; --blue-light:#5b8ef5;
@@ -120,14 +122,11 @@
       <h3><span class="dot"></span> Öğrenci ve Deneme Seç</h3>
       <label>Öğrenci</label>
       <select id="m_ogrenci">
-        <option>Öğrenci Adı Soyadı — No: 6144</option>
-        <option>Bora Özbekoğlu — No: 6145</option>
-        <option>Buğlem Demir — No: 6139</option>
+        <option value="">Yükleniyor...</option>
       </select>
       <label>Deneme</label>
       <select id="m_deneme">
-        <option>ÖZDEBİR LGS-4 — 13.04.2026</option>
-        <option>LİMİT LGS-5 — 07.04.2026</option>
+        <option value="">Yükleniyor...</option>
       </select>
     </div>
 
@@ -181,6 +180,26 @@ document.querySelectorAll('.tab').forEach(tab=>{
     document.getElementById(tab.dataset.tab).classList.add('active');
   });
 });
+
+// ============ SONUÇ GİR SEKMESİ — ÖĞRENCİ/DENEME DROPDOWN (Supabase'ten gerçek veri) ============
+async function dropdownlariYukle(){
+  const [ogrenciler, denemeler] = await Promise.all([ogrencileriListele(), denemeleriListele()]);
+
+  const oSel = document.getElementById('m_ogrenci');
+  oSel.innerHTML = ogrenciler.length
+    ? ogrenciler.map(o => `<option value="${o.id}">${o.ad_soyad}${o.ogrenci_no ? ' — No: ' + o.ogrenci_no : ''}</option>`).join('')
+    : '<option value="">Kayıtlı öğrenci yok</option>';
+
+  const dSel = document.getElementById('m_deneme');
+  dSel.innerHTML = denemeler.length
+    ? denemeler.map(d => `<option value="${d.id}">${d.deneme_adi} — ${formatTarih(d.deneme_tarihi)}</option>`).join('')
+    : '<option value="">Kayıtlı deneme yok</option>';
+}
+function formatTarih(iso){
+  if(!iso) return '';
+  const [y,m,d] = iso.split('-');
+  return `${d}.${m}.${y}`;
+}
 
 // ============ SONUÇ GİRİŞ (admin paneliyle aynı mantık) ============
 const dersler = [
@@ -246,50 +265,58 @@ document.getElementById('btnManuelKaydet').addEventListener('click', ()=>{
   alert('Sonuç kaydedildi (prototip). Gerçek sürümde deneme_sonuclari ve ders_sonuclari tablolarına yazılacak.');
 });
 
-// ============ ÖĞRENCİ ARA ============
-const ornekOgrenciler = [
-  { ad:"Buğlem Demir", no:"6139", sinif:"8-A", denemeler:[
-      {ad:"ÖZDEBİR LGS-4", tarih:"13.04.2026", net:74.10},
-      {ad:"LİMİT LGS-5", tarih:"07.04.2026", net:69.30},
-  ]},
-  { ad:"Bora Özbekoğlu", no:"6144", sinif:"8-B", denemeler:[
-      {ad:"ÖZDEBİR LGS-4", tarih:"13.04.2026", net:78.34},
-      {ad:"LİMİT LGS-5", tarih:"07.04.2026", net:66.00},
-      {ad:"NFT GELİŞİM İZLEME LGS-3", tarih:"24.03.2026", net:71.67},
-  ]},
-];
-
-function aramaYap(){
-  const q = document.getElementById('aramaKutusu').value.trim().toLowerCase();
+// ============ ÖĞRENCİ ARA (Supabase'ten gerçek arama) ============
+async function aramaYap(){
+  const q = document.getElementById('aramaKutusu').value.trim();
   const el = document.getElementById('ogrenciSonuc');
-  el.innerHTML = '';
-  if(!q){ return; }
+  if(!q){ el.innerHTML = ''; return; }
 
-  const bulunan = ornekOgrenciler.filter(o => o.ad.toLowerCase().includes(q) || o.no.includes(q));
+  el.innerHTML = '<div class="empty-hint">Aranıyor...</div>';
+
+  const bulunan = await ogrenciAra(q);
+  el.innerHTML = '';
+
   if(bulunan.length === 0){
     el.innerHTML = '<div class="empty-hint">Eşleşen öğrenci bulunamadı.</div>';
     return;
   }
 
-  bulunan.forEach(o=>{
+  for(const o of bulunan){
     const ozet = document.createElement('div');
     ozet.className = 'ogrenci-ozet';
-    ozet.innerHTML = `<div><div class="ad">${o.ad}</div><div class="meta">${o.sinif} · No: ${o.no}</div></div><div class="meta">${o.denemeler.length} deneme</div>`;
+    ozet.innerHTML = `<div><div class="ad">${o.ad_soyad}</div><div class="meta">${o.sinif || ''}${o.sinif && o.ogrenci_no ? ' · ' : ''}${o.ogrenci_no ? 'No: ' + o.ogrenci_no : ''}</div></div>`;
     el.appendChild(ozet);
 
-    o.denemeler.forEach(d=>{
+    const sonuclar = await ogrenciSonuclariGetir(o.id);
+    ozet.insertAdjacentHTML('beforeend', `<div class="meta">${sonuclar.length} deneme</div>`);
+
+    if(sonuclar.length === 0){
+      const bosKart = document.createElement('div');
+      bosKart.className = 'empty-hint';
+      bosKart.textContent = 'Bu öğrencinin henüz deneme sonucu yok.';
+      el.appendChild(bosKart);
+      continue;
+    }
+
+    sonuclar.forEach(sonuc=>{
+      const d = sonuc.denemeler || {};
       const card = document.createElement('div');
       card.className = 'exam-card';
-      card.innerHTML = `<div><div class="name">${d.ad}</div><div class="date">${d.tarih}</div></div><div class="net">${d.net.toFixed(2).replace('.',',')}</div>`;
+      card.innerHTML = `<div><div class="name">${d.deneme_adi || ''}</div><div class="date">${d.deneme_tarihi ? formatTarih(d.deneme_tarihi) : ''}</div></div><div class="net">${Number(sonuc.toplam_net).toFixed(2).replace('.',',')}</div>`;
+      card.style.cursor = 'pointer';
+      card.addEventListener('click', ()=>{
+        window.location.href = `detay-sayfasi.html?ogrenci_id=${o.id}&deneme_sonuc_id=${sonuc.id}`;
+      });
       el.appendChild(card);
     });
-  });
+  }
 }
 
 document.getElementById('btnAra').addEventListener('click', aramaYap);
 document.getElementById('aramaKutusu').addEventListener('keypress', e=>{ if(e.key==='Enter') aramaYap(); });
 
 dersGirisCiz();
+dropdownlariYukle();
 </script>
 
 </body>
