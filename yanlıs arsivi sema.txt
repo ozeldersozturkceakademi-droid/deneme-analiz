@@ -1,0 +1,54 @@
+-- =====================================================
+-- YANLIŞ ARŞİVİ MODÜLÜ — Supabase SQL Editor'de bir kez çalıştır
+-- =====================================================
+-- Bu dosya, mevcut supabase-sema.sql'e (ogrenciler, dersler tabloları)
+-- EK olarak çalışır. Önce o şema kurulu olmalı.
+
+-- 1) YANLIŞ ARŞİVİ TABLOSU
+create table yanlis_arsivi (
+  id uuid primary key default gen_random_uuid(),
+  ogrenci_id uuid references ogrenciler(id) on delete cascade,
+  ders_id uuid references dersler(id),
+  yukleyen_ogretmen text not null,        -- öğretmenin kullanıcı adı (sessionStorage'daki deneme_kullanici_adi)
+  yuklenme_tarihi timestamptz default now(),
+  fotograf_url text not null,             -- Supabase Storage public URL
+  aciklama text,                          -- konu/açıklama, opsiyonel
+  durum text not null default 'cozulmedi'
+    check (durum in ('cozulmedi','tekrar_bakildi','cozuldu'))
+);
+
+create index idx_yanlis_ogrenci on yanlis_arsivi(ogrenci_id);
+create index idx_yanlis_ders on yanlis_arsivi(ders_id);
+create index idx_yanlis_durum on yanlis_arsivi(durum);
+create index idx_yanlis_tarih on yanlis_arsivi(yuklenme_tarihi desc);
+
+-- =====================================================
+-- 2) STORAGE BUCKET (fotoğraflar için, PUBLIC)
+-- =====================================================
+insert into storage.buckets (id, name, public)
+values ('yanlis-fotograflari', 'yanlis-fotograflari', true)
+on conflict (id) do nothing;
+
+-- Public bucket olduğu için herkes (anon key ile) okuyabilir, yükleyebilir, silebilir.
+-- Storage.objects tablosunda RLS varsayılan olarak açık olduğundan politika ekliyoruz.
+create policy "yanlis_arsivi_herkes_okur"
+  on storage.objects for select
+  using (bucket_id = 'yanlis-fotograflari');
+
+create policy "yanlis_arsivi_herkes_yukler"
+  on storage.objects for insert
+  with check (bucket_id = 'yanlis-fotograflari');
+
+create policy "yanlis_arsivi_herkes_siler"
+  on storage.objects for delete
+  using (bucket_id = 'yanlis-fotograflari');
+
+-- =====================================================
+-- ÖRNEK: Bir öğrencinin belirli dersteki yanlış arşivini çekme
+-- =====================================================
+-- select ya.*, d.ders_adi
+-- from yanlis_arsivi ya
+-- join dersler d on d.id = ya.ders_id
+-- where ya.ogrenci_id = '<ogrenci_uuid>'
+--   and ya.ders_id = '<ders_uuid>'   -- opsiyonel filtre
+-- order by ya.yuklenme_tarihi desc;
