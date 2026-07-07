@@ -213,16 +213,39 @@ async function hamCevaplariKaydet(denemeSonucId, cevaplarArray){
   return true;
 }
 
-// Bir deneme için cevap anahtarını kaydetme (opsiyonel, kazanım analizi altyapısı için)
+// Bir deneme için cevap anahtarını kaydetme/güncelleme (deneme+ders+soru_no eşsiz olduğu için
+// upsert kullanılır — aynı ders için tekrar kaydedilirse eskisinin üzerine yazar).
 async function cevapAnahtariKaydet(denemeId, dersId, anahtarArray){
   // anahtarArray: [{ soru_no, dogru_cevap, kazanim }, ...]
   const rows = anahtarArray.map(a => ({
     deneme_id: denemeId, ders_id: dersId,
     soru_no: a.soru_no, dogru_cevap: a.dogru_cevap, kazanim: a.kazanim || null,
   }));
-  const { error } = await sb.from('cevap_anahtarlari').insert(rows);
+  const { error } = await sb.from('cevap_anahtarlari')
+    .upsert(rows, { onConflict: 'deneme_id,ders_id,soru_no' });
   if(error){ console.error('cevapAnahtariKaydet hatası:', error); return null; }
   return true;
+}
+
+// Bir deneme+ders için kayıtlı cevap anahtarını soru sırasına göre getirir.
+async function cevapAnahtariGetir(denemeId, dersId){
+  const { data, error } = await sb.from('cevap_anahtarlari')
+    .select('soru_no, dogru_cevap')
+    .eq('deneme_id', denemeId).eq('ders_id', dersId)
+    .order('soru_no');
+  if(error){ console.error('cevapAnahtariGetir hatası:', error); return []; }
+  return data;
+}
+
+// Bir deneme için tüm derslerin cevap anahtarı durumunu (kaç soru girilmiş) getirir.
+// Dönen değer: { [ders_id]: soruSayisi }
+async function cevapAnahtarlariDurumGetir(denemeId){
+  const { data, error } = await sb.from('cevap_anahtarlari')
+    .select('ders_id').eq('deneme_id', denemeId);
+  if(error){ console.error('cevapAnahtarlariDurumGetir hatası:', error); return {}; }
+  const durum = {};
+  data.forEach(r => { durum[r.ders_id] = (durum[r.ders_id] || 0) + 1; });
+  return durum;
 }
 
 // =====================================================
@@ -297,6 +320,31 @@ async function fotografSonucKaydet(ogrenciId, denemeId, dersId, dogru, yanlis, b
     await hamCevaplariKaydet(sonuc.id, cevaplarArray);
   }
   return sonuc;
+}
+
+// =====================================================
+// OPTİK ŞABLON (YAYIN BAZLI KALİBRASYON — bir kez yapılır, tüm öğrencilerde/denemelerde kullanılır)
+// =====================================================
+async function sablonKaydet(yayinAdi, sablonJson){
+  const { data, error } = await sb.from('optik_sablonlari')
+    .upsert([{ yayin_adi: yayinAdi, sablon_json: sablonJson, guncelleme_tarihi: new Date().toISOString() }], { onConflict: 'yayin_adi' })
+    .select();
+  if(error){ console.error('sablonKaydet hatası:', error); return null; }
+  return data[0];
+}
+
+async function sablonGetir(yayinAdi){
+  if(!yayinAdi) return null;
+  const { data, error } = await sb.from('optik_sablonlari')
+    .select('*').eq('yayin_adi', yayinAdi).maybeSingle();
+  if(error){ console.error('sablonGetir hatası:', error); return null; }
+  return data;
+}
+
+async function sablonlariListele(){
+  const { data, error } = await sb.from('optik_sablonlari').select('*').order('yayin_adi');
+  if(error){ console.error('sablonlariListele hatası:', error); return []; }
+  return data;
 }
 
 // =====================================================
