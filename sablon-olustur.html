@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Şablon Oluştur — Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy-deep:#0a1a37; --navy:#0f2657; --blue:#2b5fc7; --blue-light:#5b8ef5;
+    --ice:#eef3fb; --ice-2:#f6f9fd; --ink:#101828; --muted:#65748b; --line:#e2e8f4;
+    --success:#0f9d63; --success-bg:#e6f7ef; --danger:#e0473a; --danger-bg:#fdeceb;
+    --warn:#c47d10; --warn-bg:#fdf3e2; --radius:14px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{ font-family:'Inter',sans-serif; background:var(--ice-2); color:var(--ink); -webkit-font-smoothing:antialiased;}
+
+  .topband{
+    background:linear-gradient(135deg, var(--navy-deep) 0%, var(--navy) 55%, var(--blue) 130%);
+    padding:18px 18px 20px; color:#fff; position:relative;
+  }
+  .logout-btn{
+    position:absolute; top:18px; right:16px; font-size:11px; font-weight:700;
+    color:rgba(255,255,255,.75); background:rgba(255,255,255,.12); border:none;
+    padding:7px 12px; border-radius:999px; cursor:pointer;
+  }
+  .back-link{
+    position:absolute; top:18px; left:16px; font-size:11px; font-weight:700;
+    color:rgba(255,255,255,.75); background:rgba(255,255,255,.12); border:none;
+    padding:7px 12px; border-radius:999px; cursor:pointer; text-decoration:none;
+  }
+  .brand-row{ display:flex; align-items:center; gap:10px; margin-top:6px;}
+  .brand-name{ font-family:'Manrope',sans-serif; font-weight:700; font-size:11px; line-height:1.3;}
+  .brand-tag{ font-size:9.5px; color:rgba(255,255,255,.6);}
+  .page-title{ font-family:'Manrope',sans-serif; font-weight:800; font-size:19px; margin-top:14px;}
+  .page-sub{ font-size:12px; color:rgba(255,255,255,.7); margin-top:2px;}
+
+  .wrap{ max-width:640px; margin:0 auto; padding:18px 14px 60px;}
+
+  .card{ background:#fff; border:1px solid var(--line); border-radius:var(--radius); padding:16px; margin-bottom:14px; box-shadow:0 1px 3px rgba(15,38,87,.05);}
+  .card h3{ font-family:'Manrope',sans-serif; font-size:14px; font-weight:700; color:var(--navy-deep); margin-bottom:12px; display:flex; align-items:center; gap:7px;}
+  .card h3 .dot{ width:6px; height:6px; border-radius:50%; background:var(--blue);}
+  .card h3 .step{ width:20px; height:20px; border-radius:50%; background:var(--navy-deep); color:#fff; font-size:10.5px; display:flex; align-items:center; justify-content:center; font-weight:800;}
+
+  label{ font-size:11.5px; font-weight:600; color:var(--muted); display:block; margin-bottom:5px; margin-top:12px;}
+  label:first-of-type{ margin-top:0;}
+  input[type=text], input[type=number], select{
+    width:100%; border:1px solid var(--line); border-radius:10px; padding:10px 12px;
+    font-size:13.5px; font-family:'Inter',sans-serif; color:var(--ink); background:var(--ice-2);
+  }
+  input:focus, select:focus{ outline:none; border-color:var(--blue); background:#fff;}
+
+  .hint{ font-size:11px; color:var(--muted); margin-top:6px; line-height:1.5;}
+  .hint.warn{ color:var(--warn);}
+  .hint.ok{ color:var(--success);}
+  .hint.danger{ color:var(--danger);}
+
+  .btn{ display:inline-flex; align-items:center; justify-content:center; gap:6px; background:var(--navy-deep); color:#fff;
+    border:none; padding:12px 18px; border-radius:10px; font-weight:700; font-size:13.5px; cursor:pointer; width:100%; margin-top:14px;}
+  .btn:active{ opacity:.85;}
+  .btn:disabled{ background:var(--line); color:var(--muted); cursor:not-allowed;}
+  .btn.secondary{ background:var(--ice); color:var(--navy);}
+  .btn.half{ width:calc(50% - 4px);}
+  .btn-row{ display:flex; gap:8px; margin-top:14px;}
+  .btn-row .btn{ margin-top:0;}
+
+  .dropzone{
+    border:2px dashed var(--line); border-radius:12px; padding:22px 14px;
+    text-align:center; color:var(--muted); font-size:12.5px; cursor:pointer; background:var(--ice-2);
+  }
+  .dropzone strong{ color:var(--navy); display:block; margin-bottom:4px; font-size:13.5px;}
+
+  .canvas-wrap{ position:relative; margin-top:12px; border-radius:12px; overflow:hidden; border:1px solid var(--line); display:none;}
+  canvas{ display:block; width:100%; height:auto; cursor:crosshair; touch-action:none;}
+
+  .kalib-status{
+    display:flex; justify-content:space-between; align-items:center; margin-top:10px;
+    font-size:11.5px; color:var(--muted); font-weight:600; gap:8px;
+  }
+  .kalib-dots{ display:flex; gap:4px; flex-shrink:0;}
+  .kalib-dot{ width:9px; height:9px; border-radius:50%; background:var(--line);}
+  .kalib-dot.done{ background:var(--success);}
+
+  .ders-ilerleme{ display:flex; flex-wrap:wrap; gap:6px; margin:10px 0 4px;}
+  .ders-pill{ font-size:10.5px; font-weight:700; padding:5px 10px; border-radius:999px; background:var(--ice); color:var(--muted);}
+  .ders-pill.tamam{ background:var(--success-bg); color:var(--success);}
+  .ders-pill.aktif{ background:var(--blue); color:#fff;}
+
+  .sablon-item{
+    display:flex; justify-content:space-between; align-items:center; padding:10px 12px;
+    border:1px solid var(--line); border-radius:10px; margin-bottom:8px; font-size:12.5px;
+  }
+  .sablon-item button{ font-size:11px; font-weight:700; color:var(--blue); background:none; border:none; cursor:pointer;}
+</style>
+</head>
+<body>
+
+<div class="topband">
+  <a href="admin-paneli.html" class="back-link">‹ Admin</a>
+  <button class="logout-btn" id="btnCikis">Çıkış Yap</button>
+  <div class="brand-row">
+    <div>
+      <div class="brand-name">ÖZEL ÖZTÜRKÇE AKADEMİ<br>KİŞİSEL GELİŞİM KURSU</div>
+      <div class="brand-tag">Deneme Analiz Sistemi — Admin</div>
+    </div>
+  </div>
+  <div class="page-title">Optik Form Şablonu</div>
+  <div class="page-sub">Bir yayının form yerleşimini BİR KEZ kalibre et — sonra o yayının tüm denemelerinde ve tüm öğrencilerinde otomatik kullanılır</div>
+</div>
+
+<div class="wrap">
+
+  <!-- MEVCUT ŞABLONLAR -->
+  <div class="card" id="mevcutSablonlarCard" style="display:none;">
+    <h3><span class="dot"></span> Kayıtlı Şablonlar</h3>
+    <div id="sablonListesi"></div>
+  </div>
+
+  <!-- ADIM 1: YAYIN ADI -->
+  <div class="card">
+    <h3><span class="step">1</span> Yayın</h3>
+    <label>Yayın Adı</label>
+    <input type="text" id="s_yayin_adi" placeholder="Örn: ÖZDEBİR">
+    <div class="hint">Bu isim, deneme oluştururken girdiğin "Yayın" alanıyla birebir aynı olmalı (büyük/küçük harf önemli değil).</div>
+  </div>
+
+  <!-- ADIM 2: FOTOĞRAF YÜKLE + DIŞ KÖŞE -->
+  <div class="card" id="fotoCard">
+    <h3><span class="step">2</span> Örnek Form Fotoğrafı — Dış Sınır</h3>
+    <div class="dropzone" id="dropzone">
+      <strong>Fotoğraf seç veya sürükle</strong>
+      Formun tamamının net göründüğü, düz açıdan çekilmiş bir kare yükle
+    </div>
+    <input type="file" id="fileInput" accept="image/*" style="display:none;">
+
+    <div class="canvas-wrap" id="canvasWrapOrijinal">
+      <canvas id="canvasOrijinal"></canvas>
+    </div>
+
+    <div class="btn-row" id="otomatikBtnRow" style="display:none;">
+      <button class="btn secondary half" id="btnOtomatikAlgila">🪄 Otomatik Algıla</button>
+      <button class="btn half" id="btnElleKalibre">✋ Elle İşaretle</button>
+    </div>
+
+    <div class="kalib-status" id="kalibStatusOrijinal" style="display:none;">
+      <span id="kalibMetinOrijinal">Formun 4 dış köşesine sırayla tıkla: Sol Üst → Sağ Üst → Sağ Alt → Sol Alt</span>
+      <div class="kalib-dots">
+        <div class="kalib-dot" id="odot0"></div><div class="kalib-dot" id="odot1"></div>
+        <div class="kalib-dot" id="odot2"></div><div class="kalib-dot" id="odot3"></div>
+      </div>
+    </div>
+
+    <div class="btn-row" id="duzeltBtnRow" style="display:none;">
+      <button class="btn secondary half" id="btnOrijinalSifirla">Sıfırla</button>
+      <button class="btn half" id="btnPerspektifDuzelt" disabled>Perspektifi Düzelt →</button>
+    </div>
+
+    <div class="hint" id="otomatikHint"></div>
+  </div>
+
+  <!-- ADIM 3: KANONİK GÖRÜNTÜ + DERS BLOKLARI -->
+  <div class="card" id="blokCard" style="display:none;">
+    <h3><span class="dot"></span> Ders Bloklarını İşaretle</h3>
+    <div class="hint">Düzeltilmiş sayfa aşağıda. Sırayla her ders için kutucuk alanının 4 köşesine tıkla.</div>
+
+    <div class="ders-ilerleme" id="dersIlerleme"></div>
+
+    <div class="canvas-wrap" id="canvasWrapKanonik" style="display:block;">
+      <canvas id="canvasKanonik"></canvas>
+    </div>
+
+    <div style="display:flex; gap:8px; margin-top:10px;">
+      <div style="flex:1;">
+        <label>Soru Sayısı</label>
+        <input type="number" id="b_soru_sayisi" min="1" max="100" value="20">
+      </div>
+      <div style="flex:1;">
+        <label>Seçenek Sayısı</label>
+        <select id="b_secenek_sayisi">
+          <option value="4">4 (A-D)</option>
+          <option value="5">5 (A-E)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="kalib-status" id="kalibStatusBlok" style="margin-top:12px;">
+      <span id="kalibMetinBlok">— Önce yukarıdaki ders listesinden birine tıkla —</span>
+      <div class="kalib-dots">
+        <div class="kalib-dot" id="bdot0"></div><div class="kalib-dot" id="bdot1"></div>
+        <div class="kalib-dot" id="bdot2"></div><div class="kalib-dot" id="bdot3"></div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn secondary half" id="btnBlokSifirla">Bu Bloğu Sıfırla</button>
+      <button class="btn half" id="btnBlokKaydet" disabled>Bu Dersi Onayla ✓</button>
+    </div>
+
+    <button class="btn" id="btnSablonKaydet" style="display:none;">Şablonu Kaydet</button>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-baglanti.js"></script>
+<script src="optik-motor.js"></script>
+<script>
+// ============ AUTH GUARD ============
+(function(){
+  const rol = sessionStorage.getItem('deneme_kullanici_rol');
+  const kadi = sessionStorage.getItem('deneme_kullanici_adi');
+  if(!rol || !kadi || rol !== 'admin'){ window.location.href = 'giris.html'; return; }
+})();
+document.getElementById('btnCikis').addEventListener('click', ()=>{
+  sessionStorage.removeItem('deneme_kullanici_rol');
+  sessionStorage.removeItem('deneme_kullanici_adi');
+  window.location.href = 'giris.html';
+});
+
+// ============ MEVCUT ŞABLONLAR LİSTESİ ============
+async function sablonListesiYukle(){
+  try{
+    const sablonlar = await sablonlariListele();
+    if(!sablonlar.length) return;
+    document.getElementById('mevcutSablonlarCard').style.display = 'block';
+    const el = document.getElementById('sablonListesi');
+    el.innerHTML = sablonlar.map(s=>`
+      <div class="sablon-item">
+        <span><strong>${s.yayin_adi}</strong> — ${(s.sablon_json.bloklar||[]).length} ders bloğu</span>
+        <button data-yayin="${s.yayin_adi}">Düzenle</button>
+      </div>
+    `).join('');
+    el.querySelectorAll('button').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        document.getElementById('s_yayin_adi').value = btn.dataset.yayin;
+        alert('Yayın adı dolduruldu. Yeni bir örnek fotoğraf yükleyip şablonu yeniden oluşturabilirsin (kaydedince eskisinin üzerine yazılır).');
+      });
+    });
+  } catch(err){ console.error(err); }
+}
+sablonListesiYukle();
+
+// ============ DERS LİSTESİ ============
+let dersListesi = [];
+let blokDurumu = {}; // { ders_id: { koseler, soru_sayisi, secenek_sayisi } }
+let aktifDersId = null;
+
+async function dersListesiYukle(){
+  dersListesi = await derslerListele();
+  dersIlerlemeCiz();
+}
+dersListesiYukle();
+
+function dersIlerlemeCiz(){
+  const el = document.getElementById('dersIlerleme');
+  el.innerHTML = dersListesi.map(d=>{
+    const tamamMi = !!blokDurumu[d.id];
+    const aktifMi = d.id === aktifDersId;
+    return `<div class="ders-pill ${aktifMi ? 'aktif' : (tamamMi ? 'tamam' : '')}" data-id="${d.id}">${tamamMi ? '✓ ' : ''}${d.ders_adi}</div>`;
+  }).join('');
+  el.querySelectorAll('.ders-pill').forEach(pill=>{
+    pill.addEventListener('click', ()=> dersinBlokKalibrasyonunaGec(pill.dataset.id));
+  });
+  const tamamlanan = Object.keys(blokDurumu).length;
+  document.getElementById('btnSablonKaydet').style.display = tamamlanan > 0 ? 'block' : 'none';
+}
+
+// ============ ADIM 2: ORİJİNAL FOTOĞRAF + DIŞ KÖŞE ============
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+const canvasOrijinal = document.getElementById('canvasOrijinal');
+const ctxOrijinal = canvasOrijinal.getContext('2d');
+const canvasWrapOrijinal = document.getElementById('canvasWrapOrijinal');
+
+dropzone.addEventListener('click', ()=> fileInput.click());
+fileInput.addEventListener('change', e=>{ if(e.target.files.length) fotografYukle(e.target.files[0]); });
+dropzone.addEventListener('dragover', e=>{ e.preventDefault(); dropzone.style.borderColor='var(--blue)'; });
+dropzone.addEventListener('dragleave', ()=>{ dropzone.style.borderColor='var(--line)'; });
+dropzone.addEventListener('drop', e=>{
+  e.preventDefault(); dropzone.style.borderColor='var(--line)';
+  if(e.dataTransfer.files.length) fotografYukle(e.dataTransfer.files[0]);
+});
+
+let orijinalOffscreen, orijinalOffscreenCtx;
+let orijinalDispScale = 1;
+let disKoseNoktalari = []; // tam çözünürlük
+let elleKalibrasyonAktif = false;
+
+function fotografYukle(file){
+  const img = new Image();
+  img.onload = ()=>{
+    orijinalOffscreen = document.createElement('canvas');
+    orijinalOffscreen.width = img.naturalWidth;
+    orijinalOffscreen.height = img.naturalHeight;
+    orijinalOffscreenCtx = orijinalOffscreen.getContext('2d');
+    orijinalOffscreenCtx.drawImage(img, 0, 0);
+
+    const dispW = Math.min(600, img.naturalWidth);
+    const dispH = img.naturalHeight * (dispW / img.naturalWidth);
+    orijinalDispScale = img.naturalWidth / dispW;
+    canvasOrijinal.width = dispW; canvasOrijinal.height = dispH;
+    ctxOrijinal.drawImage(img, 0, 0, dispW, dispH);
+
+    canvasWrapOrijinal.style.display = 'block';
+    document.getElementById('otomatikBtnRow').style.display = 'flex';
+    disKoseNoktalari = [];
+    elleKalibrasyonAktif = false;
+    document.getElementById('kalibStatusOrijinal').style.display = 'none';
+    document.getElementById('duzeltBtnRow').style.display = 'none';
+    document.getElementById('otomatikHint').textContent = '';
+    dropzone.querySelector('strong').textContent = file.name;
+  };
+  img.src = URL.createObjectURL(file);
+}
+
+document.getElementById('btnOtomatikAlgila').addEventListener('click', async ()=>{
+  const btn = document.getElementById('btnOtomatikAlgila');
+  const hint = document.getElementById('otomatikHint');
+  btn.disabled = true; btn.textContent = 'Yükleniyor (OpenCV)...';
+  hint.textContent = '';
+  hint.className = 'hint';
+  try{
+    await opencvYukle();
+    btn.textContent = 'Algılanıyor...';
+    const koseler = otomatikDortKoseAlgila(orijinalOffscreen);
+    if(!koseler){
+      hint.textContent = 'Otomatik algılama başarısız oldu — kağıdın arka planla kontrastı düşük olabilir. "Elle İşaretle" ile devam et.';
+      hint.className = 'hint warn';
+      return;
+    }
+    disKoseNoktalari = [koseler.TL, koseler.TR, koseler.BR, koseler.BL];
+    ciz(ctxOrijinal, canvasOrijinal, orijinalOffscreen, disKoseNoktalari, orijinalDispScale);
+    guncelleOrijinalDots();
+    hint.textContent = 'Otomatik algılandı. Köşeler yanlışsa "Elle İşaretle" ile düzeltebilirsin.';
+    hint.className = 'hint ok';
+    document.getElementById('duzeltBtnRow').style.display = 'flex';
+    document.getElementById('btnPerspektifDuzelt').disabled = false;
+  } catch(err){
+    console.error(err);
+    hint.textContent = 'Hata: ' + err.message + ' — "Elle İşaretle" ile devam edebilirsin.';
+    hint.className = 'hint danger';
+  } finally {
+    btn.disabled = false; btn.textContent = '🪄 Otomatik Algıla';
+  }
+});
+
+document.getElementById('btnElleKalibre').addEventListener('click', ()=>{
+  elleKalibrasyonAktif = true;
+  disKoseNoktalari = [];
+  ctxOrijinal.clearRect(0,0,canvasOrijinal.width, canvasOrijinal.height);
+  ctxOrijinal.drawImage(orijinalOffscreen, 0, 0, canvasOrijinal.width, canvasOrijinal.height);
+  document.getElementById('kalibStatusOrijinal').style.display = 'flex';
+  document.getElementById('duzeltBtnRow').style.display = 'flex';
+  guncelleOrijinalDots();
+});
+
+canvasOrijinal.addEventListener('click', e=>{
+  if(!elleKalibrasyonAktif || disKoseNoktalari.length >= 4) return;
+  const rect = canvasOrijinal.getBoundingClientRect();
+  const dispX = (e.clientX - rect.left) * (canvasOrijinal.width / rect.width);
+  const dispY = (e.clientY - rect.top) * (canvasOrijinal.height / rect.height);
+  disKoseNoktalari.push({ x: dispX * orijinalDispScale, y: dispY * orijinalDispScale });
+  ciz(ctxOrijinal, canvasOrijinal, orijinalOffscreen, disKoseNoktalari, orijinalDispScale);
+  guncelleOrijinalDots();
+});
+
+function guncelleOrijinalDots(){
+  for(let i=0;i<4;i++) document.getElementById('odot'+i).classList.toggle('done', i < disKoseNoktalari.length);
+  document.getElementById('btnPerspektifDuzelt').disabled = disKoseNoktalari.length < 4;
+  const metin = document.getElementById('kalibMetinOrijinal');
+  if(metin) metin.textContent = disKoseNoktalari.length < 4
+    ? `Formun 4 dış köşesine sırayla tıkla: Sol Üst → Sağ Üst → Sağ Alt → Sol Alt (${disKoseNoktalari.length}/4)`
+    : 'Tamam. "Perspektifi Düzelt" butonuna basabilirsin.';
+}
+
+function ciz(ctx, canvas, offscreen, noktalar, scale){
+  ctx.clearRect(0,0,canvas.width, canvas.height);
+  ctx.drawImage(offscreen, 0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = '#2b5fc7'; ctx.strokeStyle = '#2b5fc7'; ctx.lineWidth = 2;
+  const dispPts = noktalar.map(p => ({ x: p.x/scale, y: p.y/scale }));
+  dispPts.forEach((p,i)=>{
+    ctx.beginPath(); ctx.arc(p.x, p.y, 6, 0, Math.PI*2); ctx.fill();
+    ctx.font = 'bold 11px sans-serif'; ctx.fillText(i+1, p.x+9, p.y-9);
+  });
+  if(dispPts.length === 4){
+    ctx.beginPath();
+    ctx.moveTo(dispPts[0].x, dispPts[0].y);
+    ctx.lineTo(dispPts[1].x, dispPts[1].y);
+    ctx.lineTo(dispPts[2].x, dispPts[2].y);
+    ctx.lineTo(dispPts[3].x, dispPts[3].y);
+    ctx.closePath(); ctx.stroke();
+  }
+}
+
+document.getElementById('btnOrijinalSifirla').addEventListener('click', ()=>{
+  disKoseNoktalari = [];
+  ctxOrijinal.clearRect(0,0,canvasOrijinal.width, canvasOrijinal.height);
+  ctxOrijinal.drawImage(orijinalOffscreen, 0, 0, canvasOrijinal.width, canvasOrijinal.height);
+  guncelleOrijinalDots();
+});
+
+// ============ PERSPEKTİF DÜZELT → ADIM 3'E GEÇ ============
+const KANONIK_W = 1000, KANONIK_H = 1414; // A4 oranı (1:1.414)
+let kanonikCanvas, kanonikCtx;
+
+document.getElementById('btnPerspektifDuzelt').addEventListener('click', async ()=>{
+  const btn = document.getElementById('btnPerspektifDuzelt');
+  btn.disabled = true; btn.textContent = 'Düzeltiliyor...';
+  try{
+    await opencvYukle();
+    const koseler = {
+      TL: disKoseNoktalari[0], TR: disKoseNoktalari[1],
+      BR: disKoseNoktalari[2], BL: disKoseNoktalari[3]
+    };
+    kanonikCanvas = perspektifDuzelt(orijinalOffscreen, koseler, KANONIK_W, KANONIK_H);
+    kanonikCtx = kanonikCanvas.getContext('2d');
+
+    const gosterimCanvas = document.getElementById('canvasKanonik');
+    gosterimCanvas.width = KANONIK_W; gosterimCanvas.height = KANONIK_H;
+    const gosterimCtx = gosterimCanvas.getContext('2d');
+    gosterimCtx.drawImage(kanonikCanvas, 0, 0);
+
+    document.getElementById('blokCard').style.display = 'block';
+    document.getElementById('blokCard').scrollIntoView({behavior:'smooth', block:'start'});
+  } catch(err){
+    console.error(err);
+    alert('Perspektif düzeltilemedi: ' + err.message);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Perspektifi Düzelt →';
+  }
+});
+
+// ============ ADIM 3: DERS BLOKLARI ============
+const canvasKanonikGoster = document.getElementById('canvasKanonik');
+const ctxKanonikGoster = canvasKanonikGoster.getContext('2d');
+let blokKoseNoktalari = []; // canvasKanonik'in KENDİ (1000x1414) koordinatında — ölçek 1:1 olduğu için ekstra scale gerekmez
+
+function dersinBlokKalibrasyonunaGec(dersId){
+  aktifDersId = dersId;
+  const ders = dersListesi.find(d => d.id === dersId);
+  document.getElementById('b_soru_sayisi').value = (blokDurumu[dersId]?.soru_sayisi) || ders.soru_sayisi || 20;
+  document.getElementById('b_secenek_sayisi').value = (blokDurumu[dersId]?.secenek_sayisi) || 4;
+  blokKoseNoktalari = [];
+  ctxKanonikGoster.clearRect(0,0,KANONIK_W, KANONIK_H);
+  ctxKanonikGoster.drawImage(kanonikCanvas, 0, 0);
+  guncelleBlokDots();
+  dersIlerlemeCiz();
+  document.getElementById('kalibMetinBlok').textContent = `${ders.ders_adi} için 4 köşeye sırayla tıkla: Sol Üst → Sağ Üst → Sağ Alt → Sol Alt`;
+}
+
+canvasKanonikGoster.addEventListener('click', e=>{
+  if(!aktifDersId || blokKoseNoktalari.length >= 4) return;
+  const rect = canvasKanonikGoster.getBoundingClientRect();
+  const x = (e.clientX - rect.left) * (canvasKanonikGoster.width / rect.width);
+  const y = (e.clientY - rect.top) * (canvasKanonikGoster.height / rect.height);
+  blokKoseNoktalari.push({ x, y });
+  blokCiz();
+  guncelleBlokDots();
+});
+
+function blokCiz(){
+  ctxKanonikGoster.clearRect(0,0,KANONIK_W, KANONIK_H);
+  ctxKanonikGoster.drawImage(kanonikCanvas, 0, 0);
+
+  // önceden onaylanmış blokları soluk yeşille göster
+  Object.values(blokDurumu).forEach(b=>{
+    _cizgiCiz(ctxKanonikGoster, b.koseler, '#0f9d63');
+  });
+
+  ctxKanonikGoster.fillStyle = '#2b5fc7'; ctxKanonikGoster.strokeStyle = '#2b5fc7'; ctxKanonikGoster.lineWidth = 2;
+  blokKoseNoktalari.forEach((p,i)=>{
+    ctxKanonikGoster.beginPath(); ctxKanonikGoster.arc(p.x, p.y, 6, 0, Math.PI*2); ctxKanonikGoster.fill();
+    ctxKanonikGoster.font = 'bold 13px sans-serif'; ctxKanonikGoster.fillText(i+1, p.x+9, p.y-9);
+  });
+  if(blokKoseNoktalari.length === 4){
+    _cizgiCiz(ctxKanonikGoster, { TL:blokKoseNoktalari[0], TR:blokKoseNoktalari[1], BR:blokKoseNoktalari[2], BL:blokKoseNoktalari[3] }, '#2b5fc7');
+  }
+}
+
+function _cizgiCiz(ctx, koseler, renk){
+  ctx.strokeStyle = renk; ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(koseler.TL.x, koseler.TL.y);
+  ctx.lineTo(koseler.TR.x, koseler.TR.y);
+  ctx.lineTo(koseler.BR.x, koseler.BR.y);
+  ctx.lineTo(koseler.BL.x, koseler.BL.y);
+  ctx.closePath(); ctx.stroke();
+}
+
+function guncelleBlokDots(){
+  for(let i=0;i<4;i++) document.getElementById('bdot'+i).classList.toggle('done', i < blokKoseNoktalari.length);
+  document.getElementById('btnBlokKaydet').disabled = blokKoseNoktalari.length < 4;
+}
+
+document.getElementById('btnBlokSifirla').addEventListener('click', ()=>{
+  blokKoseNoktalari = [];
+  blokCiz();
+  guncelleBlokDots();
+});
+
+document.getElementById('btnBlokKaydet').addEventListener('click', ()=>{
+  if(!aktifDersId || blokKoseNoktalari.length < 4) return;
+  blokDurumu[aktifDersId] = {
+    koseler: { TL:blokKoseNoktalari[0], TR:blokKoseNoktalari[1], BR:blokKoseNoktalari[2], BL:blokKoseNoktalari[3] },
+    soru_sayisi: parseInt(document.getElementById('b_soru_sayisi').value) || 20,
+    secenek_sayisi: parseInt(document.getElementById('b_secenek_sayisi').value) || 4,
+    ders_id: aktifDersId,
+    ders_adi: dersListesi.find(d=>d.id===aktifDersId).ders_adi
+  };
+  aktifDersId = null;
+  blokKoseNoktalari = [];
+  blokCiz();
+  guncelleBlokDots();
+  document.getElementById('kalibMetinBlok').textContent = '— Bir sonraki ders için yukarıdan seç —';
+  dersIlerlemeCiz();
+});
+
+// ============ ŞABLONU KAYDET ============
+document.getElementById('btnSablonKaydet').addEventListener('click', async ()=>{
+  const btn = document.getElementById('btnSablonKaydet');
+  const yayinAdi = document.getElementById('s_yayin_adi').value.trim();
+  if(!yayinAdi){ alert('Önce yayın adını gir.'); return; }
+  if(!Object.keys(blokDurumu).length){ alert('En az bir ders bloğu onaylamalısın.'); return; }
+
+  const sablonJson = {
+    kagit_en: KANONIK_W, kagit_boy: KANONIK_H,
+    bloklar: Object.values(blokDurumu)
+  };
+
+  btn.disabled = true; btn.textContent = 'Kaydediliyor...';
+  try{
+    const sonuc = await sablonKaydet(yayinAdi, sablonJson);
+    if(!sonuc) throw new Error('Bilinmeyen hata');
+    alert(`"${yayinAdi}" yayını için şablon kaydedildi (${sablonJson.bloklar.length} ders). Artık bu yayının denemelerinde Optik Okuma sayfası bu şablonu otomatik kullanacak.`);
+    await sablonListesiYukle();
+  } catch(err){
+    console.error(err);
+    alert('Kaydedilemedi: ' + err.message);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Şablonu Kaydet';
+  }
+});
+</script>
+
+</body>
+</html>

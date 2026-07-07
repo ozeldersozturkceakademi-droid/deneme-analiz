@@ -1,0 +1,27 @@
+-- =====================================================
+-- OPTİK ŞABLON TABLOSU — Supabase SQL Editor'de bir kez çalıştır
+-- =====================================================
+-- Amaç: Aynı yayının (ör. "ÖZDEBİR") optik formu tüm öğrencilerde ve tüm
+-- denemelerde AYNI fiziksel yerleşime sahiptir. Bu yüzden kalibrasyon
+-- öğrenci/deneme bazında değil, YAYIN bazında BİR KEZ yapılır ve burada saklanır.
+--
+-- sablon_json yapısı (örnek):
+-- {
+--   "kagit_en": 1000, "kagit_boy": 1414,   -- kanonik (düzeltilmiş) sayfa boyutu, piksel
+--   "bloklar": [
+--     { "ders_id": "uuid-...", "ders_adi": "Türkçe", "soru_sayisi": 20, "secenek_sayisi": 4,
+--       "koseler": { "TL":[x,y], "TR":[x,y], "BR":[x,y], "BL":[x,y] } },
+--     { "ders_id": "uuid-...", "ders_adi": "Matematik", ... }
+--   ]
+-- }
+-- Koordinatlar kanonik (düzeltilmiş) sayfa üzerinde piksel cinsindendir.
+
+create table optik_sablonlari (
+  id uuid primary key default gen_random_uuid(),
+  yayin_adi text not null unique,   -- "ÖZDEBİR", "LİMİT" gibi — denemeler.yayin ile eşleşir
+  sablon_json jsonb not null,
+  olusturma_tarihi timestamptz default now(),
+  guncelleme_tarihi timestamptz default now()
+);
+
+create index idx_optik_sablon_yayin on optik_sablonlari(yayin_adi);
