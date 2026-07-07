@@ -100,11 +100,12 @@
   .ogrenci-item:last-child{ border-bottom:none;}
   .ogrenci-item .info .ad{ font-weight:700; font-size:13.5px; color:var(--navy);}
   .ogrenci-item .info .meta{ font-size:11.5px; color:var(--muted); margin-top:2px;}
-  .ogrenci-item .aksiyon{ display:flex; gap:6px; flex-shrink:0;}
+  .ogrenci-item .aksiyon{ display:flex; gap:6px; flex-shrink:0; flex-wrap:wrap; justify-content:flex-end;}
   .ogrenci-item .aksiyon button{
     font-size:11px; font-weight:700; border:none; padding:6px 10px; border-radius:8px; cursor:pointer;
   }
   .ogrenci-item .btn-duzenle{ background:var(--ice); color:var(--navy);}
+  .ogrenci-item .btn-detay{ background:var(--blue); color:#fff;}
   .ogrenci-item .btn-sil{ background:var(--danger-bg); color:var(--danger);}
 
   /* DENEME LİSTESİ */
@@ -844,11 +845,19 @@ function ogrenciListesiCiz(){
         <div class="meta">${o.ogrenci_no ? 'No: ' + o.ogrenci_no + ' · ' : ''}${o.sinif || ''}</div>
       </div>
       <div class="aksiyon">
+        <button class="btn-detay" data-id="${o.id}">Detay</button>
         <button class="btn-duzenle" data-id="${o.id}">Düzenle</button>
         <button class="btn-sil" data-id="${o.id}">Sil</button>
       </div>
     `;
     el.appendChild(div);
+  });
+
+  // "Detay" — öğrencinin deneme sonucu detay/Yanlış Arşivi sayfasına götürür.
+  el.querySelectorAll('.btn-detay').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      window.location.href = `detay-sayfasi.html?ogrenci_id=${btn.dataset.id}`;
+    });
   });
 
   el.querySelectorAll('.btn-duzenle').forEach(btn=>{
