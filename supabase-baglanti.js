@@ -369,3 +369,63 @@ async function profilBul(imzaSutunlari){
       imzaSutunlari.every(s => kayitliSutunlar.includes(s));
   }) || null;
 }
+
+// =====================================================
+// YANLIŞ ARŞİVİ (öğrenci detay sayfası — Yanlış Arşivi sekmesi)
+// =====================================================
+
+// Fotoğrafı Supabase Storage'a yükler, public URL döner.
+// dosya: <input type="file"> içinden gelen File nesnesi
+async function yanlisFotografYukle(dosya, ogrenciId){
+  const uzanti = (dosya.name.split('.').pop() || 'jpg').toLowerCase();
+  const dosyaYolu = `${ogrenciId}/${Date.now()}_${Math.random().toString(36).slice(2,8)}.${uzanti}`;
+  const { error } = await sb.storage.from('yanlis-fotograflari').upload(dosyaYolu, dosya);
+  if(error){ console.error('yanlisFotografYukle hatası:', error); return null; }
+  const { data } = sb.storage.from('yanlis-fotograflari').getPublicUrl(dosyaYolu);
+  return data.publicUrl;
+}
+
+// Yeni bir yanlış kaydı oluşturur (fotoğraf zaten yüklenmiş, URL'i hazır olmalı).
+async function yanlisKaydet(ogrenciId, dersId, yukleyenOgretmen, fotografUrl, aciklama){
+  const { data, error } = await sb.from('yanlis_arsivi')
+    .insert([{
+      ogrenci_id: ogrenciId,
+      ders_id: dersId,
+      yukleyen_ogretmen: yukleyenOgretmen,
+      fotograf_url: fotografUrl,
+      aciklama: aciklama || null
+    }])
+    .select();
+  if(error){ console.error('yanlisKaydet hatası:', error); return null; }
+  return data[0];
+}
+
+// Bir öğrencinin yanlış arşivini getirir (en yeni üstte). dersIdFiltre verilirse o derse göre filtreler.
+async function yanlisListele(ogrenciId, dersIdFiltre = null){
+  let sorgu = sb.from('yanlis_arsivi')
+    .select(`*, dersler(ders_adi)`)
+    .eq('ogrenci_id', ogrenciId)
+    .order('yuklenme_tarihi', { ascending: false });
+  if(dersIdFiltre){
+    sorgu = sorgu.eq('ders_id', dersIdFiltre);
+  }
+  const { data, error } = await sorgu;
+  if(error){ console.error('yanlisListele hatası:', error); return []; }
+  return data;
+}
+
+// Kaydın durumunu günceller: 'cozulmedi' | 'tekrar_bakildi' | 'cozuldu'
+async function yanlisDurumGuncelle(id, durum){
+  const { error } = await sb.from('yanlis_arsivi').update({ durum }).eq('id', id);
+  if(error){ console.error('yanlisDurumGuncelle hatası:', error); return false; }
+  return true;
+}
+
+// Kaydı siler. Storage'daki dosyayı da silmek istersen fotografUrl'den yolu çıkarıp
+// sb.storage.from('yanlis-fotograflari').remove([yol]) çağrılabilir (opsiyonel, burada
+// sade tutmak için sadece DB kaydı siliniyor).
+async function yanlisSil(id){
+  const { error } = await sb.from('yanlis_arsivi').delete().eq('id', id);
+  if(error){ console.error('yanlisSil hatası:', error); return false; }
+  return true;
+}
