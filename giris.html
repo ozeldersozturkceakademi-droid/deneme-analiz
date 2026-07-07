@@ -134,6 +134,18 @@ const roleContent = {
 
 let aktifRol = 'veli';
 
+// ---- ÖĞRETMEN-DERS EŞLEŞTİRMESİ (PROTOTİP) ----
+// Gerçek sürümde bu bilgi Supabase'deki bir "ogretmenler" tablosundan gelecek.
+// Şimdilik giriş henüz gerçek kimlik doğrulaması yapmadığı için (bkz. aşağıdaki
+// btnGiris click handler'ındaki prototip notu) burada sabit bir eşleştirme
+// tutuyoruz. Kullanıcı adını girin, o öğretmenin verdiği dersler otomatik
+// sessionStorage'a yazılır ve Yanlış Arşivi ekranında filtre için kullanılır.
+const ogretmenDersleri = {
+  // 'kullanici_adi': ['Ders Adı', 'Ders Adı', ...]
+  'ogretmen1': ['Türkçe'],
+  'ogretmen2': ['Matematik', 'Fen Bilimleri'],
+};
+
 document.querySelectorAll('.role-tab').forEach(tab=>{
   tab.addEventListener('click', ()=>{
     document.querySelectorAll('.role-tab').forEach(t=>t.classList.remove('active'));
@@ -165,6 +177,16 @@ document.getElementById('btnGiris').addEventListener('click', ()=>{
 
   sessionStorage.setItem('deneme_kullanici_adi', kadi);
   sessionStorage.setItem('deneme_kullanici_rol', aktifRol);
+
+  // Öğretmen ise, hangi dersleri verdiğini de sessionStorage'a yazıyoruz.
+  // Yanlış Arşivi sayfası bunu okuyup öğretmenin sadece kendi derslerini
+  // görmesini/yüklemesini sağlayacak. Admin ve veli için bu anahtar temizlenir.
+  if (aktifRol === 'ogretmen') {
+    const dersleri = ogretmenDersleri[kadi] || [];
+    sessionStorage.setItem('deneme_kullanici_dersleri', JSON.stringify(dersleri));
+  } else {
+    sessionStorage.removeItem('deneme_kullanici_dersleri');
+  }
 
   window.location.href = roleContent[aktifRol].redirect;
 });
