@@ -9,6 +9,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-baglanti.js"></script>
 <style>
   :root{
     --navy-deep:#0a1a37;
@@ -181,6 +183,93 @@
     .hero-net .num{ font-size:32px;}
     .stat-grid{ grid-template-columns:repeat(2,1fr);}
   }
+
+  /* ============ SEKME (TAB) ÇUBUĞU ============ */
+  .tabbar{
+    max-width:640px; margin:14px auto 0; padding:0 14px;
+    display:flex; gap:6px; background:var(--ice); border-radius:12px; padding:4px;
+  }
+  .tab{
+    flex:1; text-align:center; padding:10px 6px; border-radius:9px;
+    font-size:13px; font-weight:700; color:var(--muted); cursor:pointer;
+    font-family:'Inter',sans-serif;
+  }
+  .tab.active{ background:#fff; color:var(--navy-deep); box-shadow:0 2px 8px rgba(15,38,87,.12);}
+
+  .panel{ display:none;}
+  .panel.active{ display:block;}
+
+  /* ============ YANLIŞ ARŞİVİ ============ */
+  .ya-wrap{ max-width:640px; margin:0 auto; padding:14px 14px 24px;}
+
+  .ya-filtre{
+    display:flex; gap:8px; margin-bottom:14px; overflow-x:auto; padding-bottom:2px;
+  }
+  .ya-filtre-chip{
+    flex-shrink:0; padding:8px 14px; border-radius:20px; font-size:12.5px; font-weight:700;
+    background:#fff; border:1px solid var(--line); color:var(--muted); cursor:pointer;
+    white-space:nowrap;
+  }
+  .ya-filtre-chip.active{ background:var(--navy-deep); border-color:var(--navy-deep); color:#fff;}
+
+  .ya-form{
+    background:#fff; border-radius:14px; padding:16px; margin-bottom:16px;
+    box-shadow:0 6px 20px rgba(15,38,87,.06);
+  }
+  .ya-form .baslik{ font-family:'Manrope',sans-serif; font-weight:800; font-size:14px; color:var(--navy-deep); margin-bottom:12px;}
+  .ya-form label{ font-size:11.5px; font-weight:700; color:var(--muted); display:block; margin-bottom:5px; margin-top:12px;}
+  .ya-form label:first-of-type{ margin-top:0;}
+  .ya-form select, .ya-form input[type=text], .ya-form input[type=file]{
+    width:100%; border:1px solid var(--line); border-radius:10px; padding:10px 12px;
+    font-size:13.5px; font-family:'Inter',sans-serif; color:var(--ink); background:var(--ice-2);
+  }
+  .ya-form select:focus, .ya-form input:focus{ outline:none; border-color:var(--blue); background:#fff;}
+  .btn-ya-yukle{
+    width:100%; margin-top:14px; background:var(--navy-deep); color:#fff; border:none;
+    padding:13px; border-radius:11px; font-weight:700; font-size:14px; cursor:pointer;
+    font-family:'Inter',sans-serif;
+  }
+  .btn-ya-yukle:disabled{ opacity:.55; cursor:default;}
+
+  .ya-kart-liste{ display:flex; flex-direction:column; gap:12px;}
+  .ya-kart{
+    background:#fff; border-radius:14px; overflow:hidden;
+    box-shadow:0 6px 20px rgba(15,38,87,.06); border:1px solid var(--line);
+  }
+  .ya-kart-foto{ width:100%; display:block; max-height:220px; object-fit:cover; cursor:zoom-in; background:var(--ice);}
+  .ya-kart-body{ padding:12px 14px;}
+  .ya-kart-ustsatir{ display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:6px;}
+  .ya-kart-ders{ font-weight:800; font-size:13.5px; color:var(--navy-deep); font-family:'Manrope',sans-serif;}
+  .ya-kart-meta{ font-size:11px; color:var(--muted); margin-top:2px;}
+  .ya-kart-aciklama{ font-size:12.5px; color:var(--ink); line-height:1.4; margin:6px 0;}
+  .ya-durum-badge{
+    font-size:10.5px; font-weight:700; padding:4px 9px; border-radius:20px; white-space:nowrap;
+  }
+  .ya-durum-cozulmedi{ background:var(--danger-bg); color:var(--danger);}
+  .ya-durum-tekrar_bakildi{ background:#fdf3e3; color:#a6720c;}
+  .ya-durum-cozuldu{ background:var(--success-bg); color:var(--success);}
+  .ya-kart-alt{ display:flex; gap:8px; align-items:center; margin-top:10px;}
+  .ya-durum-select{
+    flex:1; border:1px solid var(--line); border-radius:8px; padding:7px 9px;
+    font-size:12px; font-family:'Inter',sans-serif; color:var(--ink); background:var(--ice-2);
+  }
+  .btn-ya-sil{
+    border:none; background:var(--danger-bg); color:var(--danger); border-radius:8px;
+    padding:7px 12px; font-size:12px; font-weight:700; cursor:pointer;
+  }
+  .ya-bos{ text-align:center; color:var(--muted); font-size:13px; padding:40px 10px;}
+
+  /* Fotoğraf büyütme modalı */
+  .ya-modal{
+    display:none; position:fixed; inset:0; background:rgba(10,26,55,.9);
+    z-index:50; align-items:center; justify-content:center; padding:20px;
+  }
+  .ya-modal.acik{ display:flex;}
+  .ya-modal img{ max-width:100%; max-height:100%; border-radius:10px;}
+  .ya-modal-kapat{
+    position:absolute; top:18px; right:18px; color:#fff; font-size:28px;
+    cursor:pointer; line-height:1;
+  }
 </style>
 </head>
 <body>
@@ -193,7 +282,14 @@
   </div>
 </div>
 
+<div class="tabbar">
+  <div class="tab active" data-tab="detay">Sonuç Detayı</div>
+  <div class="tab" data-tab="yanlis">Yanlış Arşivi</div>
+</div>
+
 <div class="wrap">
+
+<div class="panel active" id="panel-detay">
 
   <div id="report">
     <!-- HEADER -->
@@ -268,21 +364,77 @@
     <button class="btn-pdf" id="pdfBtn">⬇ PDF Oluştur</button>
   </div>
 
+</div><!-- /panel-detay -->
+
+<div class="panel" id="panel-yanlis">
+  <div class="ya-wrap">
+
+    <!-- Yükleme formu: sadece admin ve öğretmen görür -->
+    <div class="ya-form" id="yaForm" style="display:none;">
+      <div class="baslik">Yeni Yanlış Ekle</div>
+
+      <label>Ders</label>
+      <select id="yaDersSecim"></select>
+
+      <label>Konu / Açıklama (opsiyonel)</label>
+      <input type="text" id="yaAciklama" placeholder="örn: Kesirlerde işlem hatası">
+
+      <label>Fotoğraf</label>
+      <input type="file" id="yaFoto" accept="image/*" capture="environment">
+
+      <button class="btn-ya-yukle" id="yaYukleBtn">Yükle</button>
+    </div>
+
+    <!-- Ders bazlı filtre -->
+    <div class="ya-filtre" id="yaFiltre"></div>
+
+    <!-- Kart listesi -->
+    <div class="ya-kart-liste" id="yaKartListe"></div>
+
+  </div>
+</div><!-- /panel-yanlis -->
+
+</div><!-- /wrap -->
+
+<!-- Fotoğraf büyütme modalı -->
+<div class="ya-modal" id="yaModal">
+  <div class="ya-modal-kapat" id="yaModalKapat">✕</div>
+  <img id="yaModalImg" src="" alt="Yanlış fotoğrafı">
 </div>
 
 <script>
 // ============ AUTH GUARD ============
+const kullaniciRol = sessionStorage.getItem('deneme_kullanici_rol');
+const kullaniciAdi = sessionStorage.getItem('deneme_kullanici_adi');
 (function(){
-  const rol = sessionStorage.getItem('deneme_kullanici_rol');
-  const kadi = sessionStorage.getItem('deneme_kullanici_adi');
-  if(!rol || !kadi){
+  if(!kullaniciRol || !kullaniciAdi){
     window.location.href = 'giris.html';
     return;
   }
   // Rol bazlı geri dönüş: veli -> veli-paneli, öğretmen -> ogretmen-paneli, admin -> admin-paneli
-  const geriHedef = { veli:'veli-paneli.html', ogretmen:'ogretmen-paneli.html', admin:'admin-paneli.html' }[rol] || 'giris.html';
+  const geriHedef = { veli:'veli-paneli.html', ogretmen:'ogretmen-paneli.html', admin:'admin-paneli.html' }[kullaniciRol] || 'giris.html';
   document.getElementById('btnGeri').addEventListener('click', ()=>{ window.location.href = geriHedef; });
 })();
+
+// Bu sayfa hangi öğrenciye ait sonucu gösteriyorsa, o öğrencinin id'si URL'den okunur.
+// VARSAYIM: admin/öğretmen/veli panellerinden bu sayfaya
+// detay-sayfasi.html?ogrenci_id=<uuid> şeklinde link verilecek.
+// (Mevcut #report içindeki örnek veriler henüz bu id'ye göre Supabase'den
+// çekilmiyor — bu değişiklik yalnızca yeni Yanlış Arşivi sekmesi için gerekli.)
+const ogrenciId = new URLSearchParams(window.location.search).get('ogrenci_id');
+
+// ============ SEKME (TAB) GEÇİŞİ ============
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+    if(tab.dataset.tab === 'yanlis' && !yaBaslatildi){
+      yaBaslat();
+    }
+  });
+});
 
 // ---- ÖRNEK VERİ (Supabase entegrasyonunda buradan çekilecek) ----
 const dersler = [
@@ -356,6 +508,198 @@ document.getElementById('pdfBtn').addEventListener('click', async ()=>{
   pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
   pdf.save('deneme-sonucu.pdf');
   btn.textContent = '⬇ PDF Oluştur';
+});
+
+// =====================================================
+// YANLIŞ ARŞİVİ
+// =====================================================
+let yaBaslatildi = false;
+let yaTumDersler = [];       // { id, ders_adi, sira }
+let yaYetkiliDersIdler = null; // öğretmen için: sadece kendi derslerinin id'leri. null => hepsi (admin/veli)
+let yaAktifDersFiltre = null; // null => "Tümü"
+
+// Sekmeye ilk girildiğinde bir kez çalışır: dersleri çeker, formu/filtreyi kurar, kartları listeler.
+async function yaBaslat(){
+  yaBaslatildi = true;
+
+  if(!ogrenciId){
+    document.getElementById('yaKartListe').innerHTML =
+      '<div class="ya-bos">Öğrenci bilgisi bulunamadı (URL\'de ogrenci_id eksik).</div>';
+    return;
+  }
+
+  yaTumDersler = await derslerListele();
+
+  // Öğretmen ise sessionStorage'daki ders adlarını id'lere çevirip yetkisini sınırla.
+  if(kullaniciRol === 'ogretmen'){
+    const dersAdlari = JSON.parse(sessionStorage.getItem('deneme_kullanici_dersleri') || '[]');
+    yaYetkiliDersIdler = yaTumDersler
+      .filter(d => dersAdlari.includes(d.ders_adi))
+      .map(d => d.id);
+  } else {
+    yaYetkiliDersIdler = null; // admin: sınırsız. veli: zaten sadece görüntüleyecek.
+  }
+
+  yaFormKur();
+  yaFiltreKur();
+  await yaListeYenile();
+}
+
+// Yükleme formunu kurar (sadece admin/öğretmen görür, veli göremez).
+function yaFormKur(){
+  const form = document.getElementById('yaForm');
+  if(kullaniciRol !== 'admin' && kullaniciRol !== 'ogretmen'){
+    form.style.display = 'none';
+    return;
+  }
+  form.style.display = 'block';
+
+  const dersSecim = document.getElementById('yaDersSecim');
+  const formDersleri = yaYetkiliDersIdler === null
+    ? yaTumDersler
+    : yaTumDersler.filter(d => yaYetkiliDersIdler.includes(d.id));
+
+  dersSecim.innerHTML = formDersleri
+    .map(d => `<option value="${d.id}">${d.ders_adi}</option>`).join('');
+
+  document.getElementById('yaYukleBtn').addEventListener('click', yaYukle);
+}
+
+// Ders filtre çubuğunu (chip'ler) kurar.
+function yaFiltreKur(){
+  const filtreDersleri = yaYetkiliDersIdler === null
+    ? yaTumDersler
+    : yaTumDersler.filter(d => yaYetkiliDersIdler.includes(d.id));
+
+  const filtreEl = document.getElementById('yaFiltre');
+  filtreEl.innerHTML = `<div class="ya-filtre-chip active" data-ders="">Tümü</div>` +
+    filtreDersleri.map(d => `<div class="ya-filtre-chip" data-ders="${d.id}">${d.ders_adi}</div>`).join('');
+
+  filtreEl.querySelectorAll('.ya-filtre-chip').forEach(chip=>{
+    chip.addEventListener('click', async ()=>{
+      filtreEl.querySelectorAll('.ya-filtre-chip').forEach(c=>c.classList.remove('active'));
+      chip.classList.add('active');
+      yaAktifDersFiltre = chip.dataset.ders || null;
+      await yaListeYenile();
+    });
+  });
+}
+
+// Kart listesini Supabase'den çekip ekrana basar.
+async function yaListeYenile(){
+  const liste = document.getElementById('yaKartListe');
+  liste.innerHTML = '<div class="ya-bos">Yükleniyor...</div>';
+
+  let kayitlar = await yanlisListele(ogrenciId, yaAktifDersFiltre);
+
+  // Öğretmen sadece kendi derslerindeki kayıtları görsün (admin/veli hepsini görür).
+  if(yaYetkiliDersIdler !== null){
+    kayitlar = kayitlar.filter(k => yaYetkiliDersIdler.includes(k.ders_id));
+  }
+
+  if(kayitlar.length === 0){
+    liste.innerHTML = '<div class="ya-bos">Bu derste henüz yanlış arşivi kaydı yok.</div>';
+    return;
+  }
+
+  const durumEtiket = { cozulmedi:'Çözülmedi', tekrar_bakildi:'Tekrar Bakıldı', cozuldu:'Çözüldü' };
+
+  liste.innerHTML = kayitlar.map(k=>{
+    const tarih = new Date(k.yuklenme_tarihi).toLocaleDateString('tr-TR', { day:'2-digit', month:'2-digit', year:'numeric' });
+    const dersAdi = k.dersler ? k.dersler.ders_adi : '';
+    const silYetkisi = kullaniciRol === 'admin' || (kullaniciRol === 'ogretmen' && k.yukleyen_ogretmen === kullaniciAdi);
+    const duzenlemeYetkisi = kullaniciRol === 'admin' || kullaniciRol === 'ogretmen';
+
+    return `
+      <div class="ya-kart" data-id="${k.id}">
+        <img class="ya-kart-foto" src="${k.fotograf_url}" alt="${dersAdi} yanlışı">
+        <div class="ya-kart-body">
+          <div class="ya-kart-ustsatir">
+            <div>
+              <div class="ya-kart-ders">${dersAdi}</div>
+              <div class="ya-kart-meta">${k.yukleyen_ogretmen} · ${tarih}</div>
+            </div>
+            <div class="ya-durum-badge ya-durum-${k.durum}">${durumEtiket[k.durum]}</div>
+          </div>
+          ${k.aciklama ? `<div class="ya-kart-aciklama">${k.aciklama}</div>` : ''}
+          ${duzenlemeYetkisi ? `
+            <div class="ya-kart-alt">
+              <select class="ya-durum-select" data-id="${k.id}">
+                <option value="cozulmedi" ${k.durum==='cozulmedi'?'selected':''}>Çözülmedi</option>
+                <option value="tekrar_bakildi" ${k.durum==='tekrar_bakildi'?'selected':''}>Tekrar Bakıldı</option>
+                <option value="cozuldu" ${k.durum==='cozuldu'?'selected':''}>Çözüldü</option>
+              </select>
+              ${silYetkisi ? `<button class="btn-ya-sil" data-id="${k.id}">Sil</button>` : ''}
+            </div>
+          ` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Fotoğrafa tıklayınca büyüt
+  liste.querySelectorAll('.ya-kart-foto').forEach(img=>{
+    img.addEventListener('click', ()=>{
+      document.getElementById('yaModalImg').src = img.src;
+      document.getElementById('yaModal').classList.add('acik');
+    });
+  });
+
+  // Durum değişimi
+  liste.querySelectorAll('.ya-durum-select').forEach(sel=>{
+    sel.addEventListener('change', async ()=>{
+      await yanlisDurumGuncelle(sel.dataset.id, sel.value);
+      await yaListeYenile();
+    });
+  });
+
+  // Silme
+  liste.querySelectorAll('.btn-ya-sil').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      if(!confirm('Bu kaydı silmek istediğinize emin misiniz?')) return;
+      await yanlisSil(btn.dataset.id);
+      await yaListeYenile();
+    });
+  });
+}
+
+// Yeni yanlış kaydı yükler: önce fotoğrafı Storage'a, sonra kaydı DB'ye yazar.
+async function yaYukle(){
+  const dosya = document.getElementById('yaFoto').files[0];
+  const dersId = document.getElementById('yaDersSecim').value;
+  const aciklama = document.getElementById('yaAciklama').value.trim();
+  const btn = document.getElementById('yaYukleBtn');
+
+  if(!dosya){ alert('Lütfen bir fotoğraf seçin.'); return; }
+  if(!dersId){ alert('Lütfen bir ders seçin.'); return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Yükleniyor...';
+
+  try{
+    const fotografUrl = await yanlisFotografYukle(dosya, ogrenciId);
+    if(!fotografUrl) throw new Error('Fotoğraf yüklenemedi.');
+
+    await yanlisKaydet(ogrenciId, dersId, kullaniciAdi, fotografUrl, aciklama);
+
+    document.getElementById('yaFoto').value = '';
+    document.getElementById('yaAciklama').value = '';
+    await yaListeYenile();
+  } catch(err){
+    console.error(err);
+    alert('Yükleme sırasında bir hata oluştu.');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Yükle';
+  }
+}
+
+// Modal kapatma
+document.getElementById('yaModalKapat').addEventListener('click', ()=>{
+  document.getElementById('yaModal').classList.remove('acik');
+});
+document.getElementById('yaModal').addEventListener('click', (e)=>{
+  if(e.target.id === 'yaModal') document.getElementById('yaModal').classList.remove('acik');
 });
 </script>
 
